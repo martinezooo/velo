@@ -8,7 +8,7 @@ import { useComposerStore } from "@/stores/composerStore";
 import { useUIStore } from "@/stores/uiStore";
 import { sendEmail, archiveThread } from "@/services/emailActions";
 import { buildRawEmail } from "@/utils/emailBuilder";
-import { upsertContact } from "@/services/db/contacts";
+import { upsertContact, recordContactUse } from "@/services/db/contacts";
 import { getSetting } from "@/services/db/settings";
 import { getDefaultSignature } from "@/services/db/signatures";
 import {
@@ -200,6 +200,7 @@ export function InlineReply({ thread, messages, accountId, noReply, onSent }: In
           // Update contacts frequency
           for (const addr of [...to, ...cc]) {
             await upsertContact(addr, null);
+            if (accountId) await recordContactUse(addr, accountId, { sent: true });
           }
         } catch (err) {
           console.error("Failed to send inline reply:", err);

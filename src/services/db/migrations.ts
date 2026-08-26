@@ -775,6 +775,26 @@ const MIGRATIONS = [
     description: "Accept self-signed certificates for IMAP/SMTP",
     sql: `ALTER TABLE accounts ADD COLUMN accept_invalid_certs INTEGER DEFAULT 0;`,
   },
+  {
+    version: 24,
+    description: "Track which mailbox each contact is known from",
+    // contacts.email is unique across the whole app, so a contact carries no
+    // hint of where it came from. Recipient suggestions need that: an address
+    // only ever seen in another mailbox deserves to rank lower and be flagged
+    // before it is used from this one.
+    sql: `
+      CREATE TABLE IF NOT EXISTS contact_accounts (
+        email TEXT NOT NULL,
+        account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        message_count INTEGER DEFAULT 0,
+        sent_count INTEGER DEFAULT 0,
+        last_seen_at INTEGER,
+        PRIMARY KEY (email, account_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_contact_accounts_account
+        ON contact_accounts(account_id, message_count DESC);
+    `,
+  },
 ];
 
 /**

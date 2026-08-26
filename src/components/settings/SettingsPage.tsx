@@ -540,7 +540,7 @@ export function SettingsPage() {
                   <Section title="Privacy & Security">
                     <ToggleRow
                       label="Show sender avatars"
-                      description="Loads sender pictures from Gravatar. Turning this off draws initials only and sends no request for them."
+                      description="Shows a sender's Gravatar, or their organisation's icon, falling back to initials. Turning this off draws initials only and sends no request for them."
                       checked={showSenderAvatars}
                       onToggle={() => setShowSenderAvatars(!showSenderAvatars)}
                     />

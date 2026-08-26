@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { RefreshCw, WifiOff } from "lucide-react";
 import { useUIStore } from "@/stores/uiStore";
+import { useAccountStore } from "@/stores/accountStore";
+import { triggerSync } from "@/services/gmail/syncManager";
 
 /**
  * Turn an age in milliseconds into the coarsest phrase that is still true.
@@ -35,7 +37,15 @@ export function LastSyncLine({
 }) {
   const lastSyncAt = useUIStore((s) => s.lastSyncAt);
   const isOnline = useUIStore((s) => s.isOnline);
+  const isSyncing = useUIStore((s) => s.isSyncing);
+  const accounts = useAccountStore((s) => s.accounts);
   const [now, setNow] = useState(() => Date.now());
+
+  const syncNow = useCallback(() => {
+    if (!isOnline || isSyncing) return;
+    const ids = accounts.filter((a) => a.isActive).map((a) => a.id);
+    if (ids.length > 0) triggerSync(ids);
+  }, [accounts, isOnline, isSyncing]);
 
   // Re-render on a minute cadence so the phrase does not go stale in place
   useEffect(() => {
@@ -45,25 +55,35 @@ export function LastSyncLine({
 
   const label = !isOnline
     ? "Offline"
-    : lastSyncAt === null
-      ? "Not synced yet"
-      : `Synced ${formatSyncAge(lastSyncAt, now)}`;
+    : isSyncing
+      ? "Syncing…"
+      : lastSyncAt === null
+        ? "Not synced yet"
+        : `Synced ${formatSyncAge(lastSyncAt, now)}`;
 
-  const title = lastSyncAt !== null
+  const baseTitle = lastSyncAt !== null
     ? `Last sync: ${new Date(lastSyncAt).toLocaleString()}`
     : "No sync has completed yet";
+  const title = !isOnline
+    ? `${baseTitle} — offline`
+    : isSyncing
+      ? "Sync in progress"
+      : `${baseTitle} — click to sync now`;
 
   if (variant === "titlebar") {
     return (
-      <div
-        className="flex items-center gap-1.5 px-2 text-[0.6875rem] text-sidebar-text/45"
+      <button
+        onClick={syncNow}
+        disabled={!isOnline || isSyncing}
         title={title}
+        aria-label={title}
+        className="flex items-center gap-1.5 rounded px-2 py-1 text-[0.6875rem] text-sidebar-text/45 transition-colors hover:bg-sidebar-hover hover:text-sidebar-text/70 disabled:hover:bg-transparent"
       >
         {isOnline
-          ? <RefreshCw size={11} className="shrink-0" />
+          ? <RefreshCw size={11} className={`shrink-0 ${isSyncing ? "animate-spin" : ""}`} />
           : <WifiOff size={11} className="shrink-0 text-warning/70" />}
         <span className="whitespace-nowrap">{label}</span>
-      </div>
+      </button>
     );
   }
 

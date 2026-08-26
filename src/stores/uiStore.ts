@@ -50,6 +50,8 @@ interface UIState {
   reduceMotion: boolean;
   isOnline: boolean;
   lastSyncAt: number | null;
+  /** True while any account is mid-sync, so the UI can show it. */
+  isSyncing: boolean;
   pendingOpsCount: number;
   isSyncingFolder: string | null;
   setTheme: (theme: Theme) => void;
@@ -79,6 +81,7 @@ interface UIState {
   setPendingOpsCount: (count: number) => void;
   /** Epoch ms of the last successful sync, restored across restarts. */
   setLastSyncAt: (timestamp: number) => void;
+  setSyncing: (syncing: boolean) => void;
   setSyncingFolder: (folder: string | null) => void;
 }
 
@@ -105,6 +108,7 @@ export const useUIStore = create<UIState>((set) => ({
   pendingOpsCount: 0,
   isSyncingFolder: null,
   lastSyncAt: null,
+  isSyncing: false,
 
   setTheme: (theme) => set({ theme }),
   toggleSidebar: () =>
@@ -158,6 +162,7 @@ export const useUIStore = create<UIState>((set) => ({
       setSetting("email_body_theme", next).catch(() => {});
       return { emailBodyTheme: next };
     }),
+  setSyncing: (isSyncing: boolean) => set({ isSyncing }),
   setLastSyncAt: (lastSyncAt) => {
     setSetting("last_sync_at", String(lastSyncAt)).catch(() => {});
     set({ lastSyncAt });

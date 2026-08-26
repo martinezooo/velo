@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useAccountStore, mailAccounts, type Account } from "@/stores/accountStore";
-import { ChevronDown, Check, Plus, UserPlus, Calendar, Layers } from "lucide-react";
+import { ChevronDown, Check, Plus, UserPlus, Calendar, Layers, Inbox } from "lucide-react";
 import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface AccountSwitcherProps {
@@ -153,27 +153,47 @@ export function AccountSwitcher({
   );
 
   if (variant === "inline") {
+    const mail = mailAccounts(accounts);
+    const includedCount = unifiedInbox ? mail.length : activeAccount ? 1 : 0;
     const scopeLabel = unifiedInbox
       ? "All inboxes"
       : activeAccount?.email ?? "No account";
+
     return (
-      <div className="relative" ref={dropdownRef}>
+      <div className={`relative ${collapsed ? "px-2" : "px-3"} pb-1`} ref={dropdownRef}>
         <button
           onClick={() => setOpen((v) => !v)}
-          title={unifiedInbox ? `All inboxes — ${mailAccounts(accounts).length} accounts` : scopeLabel}
-          className={`flex items-center w-full transition-colors rounded-md ${
-            collapsed ? "justify-center py-1.5" : "gap-1.5 py-1 pl-7 pr-3"
-          } text-[0.75rem] text-sidebar-text/55 hover:text-sidebar-text hover:bg-sidebar-hover`}
+          title={
+            unifiedInbox
+              ? `Reading ${mail.length} mailboxes — click to choose`
+              : `Reading ${scopeLabel} — click to choose`
+          }
+          className={`flex w-full items-center rounded-md border transition-colors ${
+            collapsed ? "justify-center px-1 py-1.5" : "gap-2 px-2 py-1.5"
+          } ${
+            open
+              ? "border-accent/50 bg-sidebar-hover"
+              : "border-border-primary/60 bg-sidebar-hover/40 hover:border-accent/40 hover:bg-sidebar-hover"
+          }`}
         >
           {unifiedInbox
-            ? <Layers size={12} className="shrink-0 text-accent" />
-            : <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />}
+            ? <Layers size={13} className="shrink-0 text-accent" />
+            : <Inbox size={13} className="shrink-0 text-accent" />}
           {!collapsed && (
             <>
-              <span className="flex-1 truncate text-left">{scopeLabel}</span>
+              <span className="flex-1 truncate text-left text-[0.75rem] text-sidebar-text/85">
+                {scopeLabel}
+              </span>
+              {/* How many mailboxes the list below is drawing from */}
+              <span
+                className="shrink-0 rounded-full bg-accent/15 px-1.5 text-[0.625rem] leading-normal text-accent"
+                title={`${includedCount} of ${mail.length} mailboxes included`}
+              >
+                {includedCount}/{mail.length}
+              </span>
               <ChevronDown
                 size={12}
-                className={`shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+                className={`shrink-0 text-sidebar-text/40 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
               />
             </>
           )}

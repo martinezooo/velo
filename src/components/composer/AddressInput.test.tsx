@@ -5,7 +5,7 @@ import { AddressInput } from "./AddressInput";
 // Mock the contacts search
 const mockSearchContacts = vi.fn().mockResolvedValue([]);
 vi.mock("@/services/db/contacts", () => ({
-  searchContacts: (...args: unknown[]) => mockSearchContacts(...args),
+  searchContactsForAccount: (...args: unknown[]) => mockSearchContacts(...args),
 }));
 
 describe("AddressInput debounce behavior", () => {
@@ -42,7 +42,7 @@ describe("AddressInput debounce behavior", () => {
 
     // Advance past 200ms debounce
     await vi.advanceTimersByTimeAsync(250);
-    expect(mockSearchContacts).toHaveBeenCalledWith("jo", 5);
+    expect(mockSearchContacts).toHaveBeenCalledWith("jo", null, 6);
   });
 
   it("should not search when input is too short", async () => {
@@ -79,6 +79,6 @@ describe("AddressInput debounce behavior", () => {
     // Now advance past debounce from last keystroke
     await vi.advanceTimersByTimeAsync(250);
     expect(mockSearchContacts).toHaveBeenCalledTimes(1);
-    expect(mockSearchContacts).toHaveBeenCalledWith("john", 5);
+    expect(mockSearchContacts).toHaveBeenCalledWith("john", null, 6);
   });
 });

@@ -20,7 +20,7 @@ import { useAccountStore } from "@/stores/accountStore";
 import { useUIStore } from "@/stores/uiStore";
 import { sendEmail, archiveThread, deleteDraft as deleteDraftAction } from "@/services/emailActions";
 import { buildRawEmail } from "@/utils/emailBuilder";
-import { upsertContact } from "@/services/db/contacts";
+import { upsertContact, recordContactUse } from "@/services/db/contacts";
 import { getSetting } from "@/services/db/settings";
 import { insertScheduledEmail } from "@/services/db/scheduledEmails";
 import { getDefaultSignature } from "@/services/db/signatures";
@@ -286,6 +286,7 @@ export function Composer() {
         // Update contacts frequency
         for (const addr of [...state.to, ...state.cc, ...state.bcc]) {
           await upsertContact(addr, null);
+            if (activeAccountId) await recordContactUse(addr, activeAccountId, { sent: true });
         }
       } catch (err) {
         console.error("Failed to send email:", err);
@@ -489,11 +490,11 @@ export function Composer() {
             selectedEmail={fromEmail ?? activeAccount?.email ?? ""}
             onChange={(alias) => setFromEmail(alias.email)}
           />
-          <AddressInput label="To" addresses={to} onChange={setTo} />
+          <AddressInput label="To" addresses={to} onChange={setTo} accountId={activeAccountId} />
           {showCcBcc ? (
             <>
-              <AddressInput label="Cc" addresses={cc} onChange={setCc} />
-              <AddressInput label="Bcc" addresses={bcc} onChange={setBcc} />
+              <AddressInput label="Cc" addresses={cc} onChange={setCc} accountId={activeAccountId} />
+              <AddressInput label="Bcc" addresses={bcc} onChange={setBcc} accountId={activeAccountId} />
             </>
           ) : (
             <button

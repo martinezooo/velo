@@ -45,13 +45,15 @@ export function TitleBar() {
         >
           Revelo
         </span>
+        {/* Sync sits by the brand, on the left, and doubles as the manual
+            trigger — the thing you reach for when you want mail now. */}
+        <LastSyncLine collapsed={false} variant="titlebar" />
       </div>
 
       {/* Status cluster — no drag region, these are controls */}
       <div className="flex shrink-0 items-center gap-1 pr-2">
         <BodyThemeSwitch />
         <AiStatusChip />
-        <LastSyncLine collapsed={false} variant="titlebar" />
       </div>
 
       {/* Window controls — right side (hidden on macOS, uses native traffic lights) */}

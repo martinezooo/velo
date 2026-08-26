@@ -172,6 +172,25 @@ export default function App() {
     };
   }, []);
 
+  // Build the contact book from synced mail, and keep it current. Runs after a
+  // sync rather than on a timer so it only works when there is new mail to read.
+  useEffect(() => {
+    const harvest = () => {
+      const emails = useAccountStore.getState().accounts.map((a) => a.email);
+      if (emails.length === 0) return;
+      import("./services/contacts/contactHarvest")
+        .then(({ harvestContacts }) => harvestContacts(emails))
+        .catch(() => {});
+    };
+    window.addEventListener("velo-sync-done", harvest);
+    // Also once at startup, to pick up mail synced before this feature existed
+    const initial = setTimeout(harvest, 4_000);
+    return () => {
+      window.removeEventListener("velo-sync-done", harvest);
+      clearTimeout(initial);
+    };
+  }, []);
+
   // Keep the dock badge honest: sync completion, local read/unread changes, and
   // a slow tick for anything that changed the DB without an event.
   useEffect(() => {
@@ -441,10 +460,12 @@ export default function App() {
         } else {
           setSyncStatus("Syncing...");
         }
+        useUIStore.getState().setSyncing(true);
       } else if (status === "done") {
         setSyncStatus("Sync complete");
         setTimeout(() => setSyncStatus(null), 2_000);
         useUIStore.getState().setLastSyncAt(Date.now());
+        useUIStore.getState().setSyncing(false);
         window.dispatchEvent(new Event("velo-sync-done"));
         updateBadgeCount();
 
@@ -457,6 +478,7 @@ export default function App() {
         }
       } else if (status === "error") {
         setSyncStatus(error ? `Sync failed: ${formatSyncError(error)}` : "Sync failed");
+        useUIStore.getState().setSyncing(false);
         // Still dispatch sync-done so the UI refreshes with any partially stored data
         window.dispatchEvent(new Event("velo-sync-done"));
         // Auto-clear the error after 8 seconds

@@ -42,6 +42,60 @@ export async function searchContacts(
   );
 }
 
+/** A contact plus where it is known from, relative to the account in use. */
+export interface ContactSuggestion extends DbContact {
+  /** True when this address has been seen in the account being written from. */
+  knownHere: boolean;
+  /** Emails of other mailboxes this address is known from. */
+  otherAccountEmails: string[];
+}
+
+/**
+ * Recipient suggestions for a specific mailbox.
+ *
+ * Contacts are global — one row per address — but where an address is *known
+ * from* matters when composing: writing to a client from a personal account by
+ * mistake is exactly the kind of error a suggestion list can cause. Addresses
+ * seen in the sending account always rank above the rest, and the rest carry
+ * the mailbox they came from so the UI can say so.
+ */
+export async function searchContactsForAccount(
+  query: string,
+  accountId: string | null,
+  limit = 8,
+): Promise<ContactSuggestion[]> {
+  const db = await getDb();
+  const pattern = `%${query}%`;
+
+  const rows = await db.select<
+    (DbContact & { known_here: number; other_accounts: string | null })[]
+  >(
+    `SELECT c.*,
+            MAX(CASE WHEN ca.account_id = $2 THEN 1 ELSE 0 END) AS known_here,
+            GROUP_CONCAT(
+              CASE WHEN ca.account_id IS NOT NULL AND ca.account_id != $2
+                   THEN a.email END
+            ) AS other_accounts,
+            COALESCE(SUM(CASE WHEN ca.account_id = $2 THEN ca.message_count END), 0) AS here_count
+     FROM contacts c
+     LEFT JOIN contact_accounts ca ON ca.email = c.email
+     LEFT JOIN accounts a ON a.id = ca.account_id
+     WHERE c.email LIKE $1 OR c.display_name LIKE $1
+     GROUP BY c.email
+     ORDER BY known_here DESC, here_count DESC, c.frequency DESC, c.display_name ASC
+     LIMIT $3`,
+    [pattern, accountId ?? "", limit],
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    knownHere: row.known_here === 1,
+    otherAccountEmails: row.other_accounts
+      ? [...new Set(row.other_accounts.split(",").filter(Boolean))]
+      : [],
+  }));
+}
+
 /**
  * Get all contacts, ordered by frequency descending.
  */
@@ -239,4 +293,29 @@ export async function getLatestAuthResult(
     [normalizeEmail(email)],
   );
   return rows[0]?.auth_results ?? null;
+}
+
+/**
+ * Note that an address was used from a specific mailbox.
+ *
+ * Called when mail is actually sent, so an address stops being flagged as
+ * "from another mailbox" once it has genuinely been used from this one.
+ */
+export async function recordContactUse(
+  email: string,
+  accountId: string,
+  opts: { sent?: boolean } = {},
+): Promise<void> {
+  const db = await getDb();
+  const normalized = email.trim().toLowerCase();
+  if (!normalized.includes("@")) return;
+  await db.execute(
+    `INSERT INTO contact_accounts (email, account_id, message_count, sent_count, last_seen_at)
+     VALUES ($1, $2, 1, $3, $4)
+     ON CONFLICT(email, account_id) DO UPDATE SET
+       message_count = message_count + 1,
+       sent_count = sent_count + $3,
+       last_seen_at = $4`,
+    [normalized, accountId, opts.sent ? 1 : 0, Date.now()],
+  );
 }

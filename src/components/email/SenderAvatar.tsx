@@ -1,6 +1,7 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import { getGravatarUrl } from "@/services/contacts/gravatar";
+import { getSenderDomainIconUrl } from "@/services/contacts/senderIcon";
 import { useUIStore } from "@/stores/uiStore";
 
 /**
@@ -54,13 +55,23 @@ export const SenderAvatar = memo(function SenderAvatar({
   emphasise = false,
 }: SenderAvatarProps) {
   const showAvatars = useUIStore((s) => s.showSenderAvatars);
-  const [imageFailed, setImageFailed] = useState(false);
 
   const initial = (name?.[0] ?? address?.[0] ?? "?").toUpperCase();
-  const gravatarUrl = useMemo(
-    () => (address && showAvatars ? getGravatarUrl(address) : null),
-    [address, showAvatars],
-  );
+
+  // Sources are tried in order: a personal Gravatar, then the sender's
+  // organisation icon, then initials. Each failure advances the stage.
+  const sources = useMemo(() => {
+    if (!address || !showAvatars) return [] as string[];
+    return [getGravatarUrl(address), getSenderDomainIconUrl(address)].filter(
+      (url): url is string => url !== null,
+    );
+  }, [address, showAvatars]);
+
+  const [stage, setStage] = useState(0);
+  // A recycled row shows a different sender, so start over
+  useEffect(() => { setStage(0); }, [address, showAvatars]);
+
+  const currentSource = sources[stage] ?? null;
 
   if (selected) {
     return (
@@ -72,15 +83,16 @@ export const SenderAvatar = memo(function SenderAvatar({
     );
   }
 
-  if (gravatarUrl && !imageFailed) {
+  if (currentSource) {
     return (
       <img
-        src={gravatarUrl}
+        key={currentSource}
+        src={currentSource}
         alt=""
         aria-hidden="true"
         loading="lazy"
-        onError={() => setImageFailed(true)}
-        className={`shrink-0 rounded-full object-cover ${sizeClass}`}
+        onError={() => setStage((s) => s + 1)}
+        className={`shrink-0 rounded-full bg-white object-contain ${sizeClass}`}
       />
     );
   }
