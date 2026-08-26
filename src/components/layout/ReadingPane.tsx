@@ -1,24 +1,16 @@
 import { ThreadView } from "../email/ThreadView";
-import { useThreadStore } from "@/stores/threadStore";
-import { useAccountStore } from "@/stores/accountStore";
-import { useSelectedThreadKey } from "@/hooks/useRouteNavigation";
-import { EmptyState } from "../ui/EmptyState";
-import { ReadingPaneIllustration } from "../ui/illustrations";
+import { useSelectedThread } from "@/hooks/useSelectedThread";
 
+/**
+ * The reading pane only exists while a thread is open — MailLayout does not
+ * render it otherwise, so there is no empty placeholder taking up half the
+ * window. The null branch here is a guard for the instant between a thread
+ * disappearing (archived, moved) and the layout re-rendering.
+ */
 export function ReadingPane() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
-  const selectedThreadKey = useSelectedThreadKey(activeAccountId);
-  const selectedThread = useThreadStore((s) =>
-    selectedThreadKey ? s.threadMap.get(selectedThreadKey) ?? null : null,
-  );
+  const selectedThread = useSelectedThread();
 
-  if (!selectedThread) {
-    return (
-      <div className="flex-1 flex flex-col bg-bg-primary/50 glass-panel">
-        <EmptyState illustration={ReadingPaneIllustration} title="Revelo" subtitle="Select an email to read" />
-      </div>
-    );
-  }
+  if (!selectedThread) return null;
 
   return (
     <div className="flex-1 bg-bg-primary/50 overflow-hidden glass-panel">

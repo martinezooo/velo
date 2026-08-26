@@ -23,7 +23,7 @@ import { getMessagesForThread } from "@/services/db/messages";
 import { getSmartFolderSearchQuery, mapSmartFolderRows, type SmartFolderRow } from "@/services/search/smartFolderQuery";
 import { getDb } from "@/services/db/connection";
 import { Archive, Trash2, X, Ban, Filter, ChevronRight, Package, FolderSearch } from "lucide-react";
-import { EmptyState } from "../ui/EmptyState";
+import { EmptyState, EmptyStateTagline } from "../ui/EmptyState";
 import {
   InboxClearIllustration,
   NoSearchResultsIllustration,
@@ -73,7 +73,7 @@ function mergeBundleSummaries(
   return merged;
 }
 
-export function EmailList({ width, listRef }: { width?: number; listRef?: React.Ref<HTMLDivElement> }) {
+export function EmailList({ width, listRef, expanded = false }: { width?: number; listRef?: React.Ref<HTMLDivElement>; expanded?: boolean }) {
   const threads = useThreadStore((s) => s.threads);
   const accounts = useAccountStore((s) => s.accounts);
   const unifiedInbox = useAccountStore((s) => s.unifiedInbox);
@@ -615,13 +615,15 @@ export function EmailList({ width, listRef }: { width?: number; listRef?: React.
     <div
       ref={listRef}
       className={`flex flex-col bg-bg-secondary/50 glass-panel ${
-        readingPanePosition === "right"
-          ? "min-w-[240px] shrink-0"
-          : readingPanePosition === "bottom"
-            ? "w-full border-b border-border-primary h-[40%] min-h-[200px]"
-            : "w-full flex-1"
+        expanded
+          ? "w-full flex-1"
+          : readingPanePosition === "right"
+            ? "min-w-[240px] shrink-0"
+            : readingPanePosition === "bottom"
+              ? "w-full border-b border-border-primary h-[40%] min-h-[200px]"
+              : "w-full flex-1"
       }`}
-      style={readingPanePosition === "right" && width ? { width } : undefined}
+      style={!expanded && readingPanePosition === "right" && width ? { width } : undefined}
     >
       {/* Search */}
       <div className="px-3 py-2 border-b border-border-secondary">
@@ -870,7 +872,14 @@ function EmptyStateForContext({
         const msg = categoryMessages[activeCategory];
         if (msg) return <EmptyState illustration={InboxClearIllustration} title={msg.title} subtitle={msg.subtitle} />;
       }
-      return <EmptyState illustration={InboxClearIllustration} title="You're all caught up" subtitle="No new conversations" />;
+      return (
+        <EmptyState
+          illustration={InboxClearIllustration}
+          title="You're all caught up"
+          subtitle="Nothing new to read right now."
+          footer={<EmptyStateTagline />}
+        />
+      );
     case "starred":
       return <EmptyState illustration={GenericEmptyIllustration} title="No starred conversations" subtitle="Star emails to find them here" />;
     case "snoozed":

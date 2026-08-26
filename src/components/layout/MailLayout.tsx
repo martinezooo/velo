@@ -2,9 +2,13 @@ import { useCallback, useRef } from "react";
 import { EmailList } from "./EmailList";
 import { ReadingPane } from "./ReadingPane";
 import { useUIStore } from "@/stores/uiStore";
+import { useSelectedThread } from "@/hooks/useSelectedThread";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 function ResizableEmailLayout() {
+  // With nothing open there is nothing to read, so the pane and its divider
+  // are not rendered at all and the list takes the whole width.
+  const hasSelection = useSelectedThread() !== null;
   const emailListWidth = useUIStore((s) => s.emailListWidth);
   const setEmailListWidth = useUIStore((s) => s.setEmailListWidth);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -37,6 +41,14 @@ function ResizableEmailLayout() {
     document.body.style.userSelect = "none";
   }, [emailListWidth, setEmailListWidth]);
 
+  if (!hasSelection) {
+    return (
+      <div ref={containerRef} className="flex flex-1 min-w-0 flex-row">
+        <EmailList listRef={listRef} expanded />
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className="flex flex-1 min-w-0 flex-row">
       <EmailList width={emailListWidth} listRef={listRef} />
@@ -51,6 +63,7 @@ function ResizableEmailLayout() {
 
 export function MailLayout() {
   const readingPanePosition = useUIStore((s) => s.readingPanePosition);
+  const hasSelection = useSelectedThread() !== null;
 
   if (readingPanePosition === "right") {
     return (
@@ -65,7 +78,7 @@ export function MailLayout() {
       <ErrorBoundary name="EmailList">
         <EmailList />
       </ErrorBoundary>
-      {readingPanePosition !== "hidden" && (
+      {readingPanePosition !== "hidden" && hasSelection && (
         <ErrorBoundary name="ReadingPane">
           <ReadingPane />
         </ErrorBoundary>
