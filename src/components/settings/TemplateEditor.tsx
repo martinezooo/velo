@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Image from "@tiptap/extension-image";
 import { Trash2, Pencil, ChevronDown } from "lucide-react";
 import { EditorToolbar } from "@/components/composer/EditorToolbar";
-import { useAccountStore } from "@/stores/accountStore";
 import {
   getTemplatesForAccount,
   insertTemplate,
@@ -16,7 +16,7 @@ import {
 import { TEMPLATE_VARIABLES } from "@/utils/templateVariables";
 
 export function TemplateEditor() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const [templates, setTemplates] = useState<DbTemplate[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");

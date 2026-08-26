@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useAccountStore } from "@/stores/accountStore";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import {
   getSubscriptions,
   executeUnsubscribe,
@@ -10,7 +10,7 @@ import { MailMinus, Search, Loader2 } from "lucide-react";
 import { formatRelativeDate } from "@/utils/date";
 
 export function SubscriptionManager() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const [subscriptions, setSubscriptions] = useState<SubscriptionEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

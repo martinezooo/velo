@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { Trash2, Pencil, ChevronUp, ChevronDown, X } from "lucide-react";
-import { useAccountStore } from "@/stores/accountStore";
 import { useLabelStore, type Label } from "@/stores/labelStore";
 import { LabelForm } from "@/components/labels/LabelForm";
 
 export function LabelEditor() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const { labels, loadLabels, deleteLabel, reorderLabels } = useLabelStore();
 
   const [editingId, setEditingId] = useState<string | null>(null);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { Trash2, Pencil } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
-import { useAccountStore } from "@/stores/accountStore";
 import { getLabelsForAccount, type DbLabel } from "@/services/db/labels";
 import {
   getFiltersForAccount,
@@ -14,7 +14,7 @@ import {
 } from "@/services/db/filters";
 
 export function FilterEditor() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const [filters, setFilters] = useState<DbFilterRule[]>([]);
   const [labels, setLabels] = useState<DbLabel[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);

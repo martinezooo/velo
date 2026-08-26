@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -6,7 +7,6 @@ import Image from "@tiptap/extension-image";
 import { Trash2, Pencil, Code } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
 import { EditorToolbar } from "@/components/composer/EditorToolbar";
-import { useAccountStore } from "@/stores/accountStore";
 import {
   getSignaturesForAccount,
   insertSignature,
@@ -16,7 +16,7 @@ import {
 } from "@/services/db/signatures";
 
 export function SignatureEditor() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const [signatures, setSignatures] = useState<DbSignature[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");

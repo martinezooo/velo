@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { Trash2, Pencil, Plus, GripVertical, ChevronDown } from "lucide-react";
-import { useAccountStore } from "@/stores/accountStore";
 import { getLabelsForAccount, type DbLabel } from "@/services/db/labels";
 import {
   getQuickStepsForAccount,
@@ -35,7 +35,7 @@ function describeActions(actionsJson: string): string {
 }
 
 export function QuickStepEditor() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const [quickSteps, setQuickSteps] = useState<DbQuickStep[]>([]);
   const [labels, setLabels] = useState<DbLabel[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { Trash2, Pencil, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
-import { useAccountStore } from "@/stores/accountStore";
 import { getLabelsForAccount, type DbLabel } from "@/services/db/labels";
 import {
   getSmartLabelRulesForAccount,
@@ -14,7 +14,7 @@ import type { FilterCriteria } from "@/services/db/filters";
 import { backfillSmartLabels } from "@/services/smartLabels/backfillService";
 
 export function SmartLabelEditor() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const [rules, setRules] = useState<DbSmartLabelRule[]>([]);
   const [labels, setLabels] = useState<DbLabel[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);

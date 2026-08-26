@@ -52,6 +52,12 @@ interface UIState {
   lastSyncAt: number | null;
   /** True while any account is mid-sync, so the UI can show it. */
   isSyncing: boolean;
+  /**
+   * Which mailbox the account-scoped settings pages are editing. Null follows
+   * the active account. Deliberately separate from activeAccountId so choosing
+   * a mailbox to configure does not change the mail you are looking at.
+   */
+  settingsAccountId: string | null;
   pendingOpsCount: number;
   isSyncingFolder: string | null;
   setTheme: (theme: Theme) => void;
@@ -82,6 +88,7 @@ interface UIState {
   /** Epoch ms of the last successful sync, restored across restarts. */
   setLastSyncAt: (timestamp: number) => void;
   setSyncing: (syncing: boolean) => void;
+  setSettingsAccountId: (accountId: string | null) => void;
   setSyncingFolder: (folder: string | null) => void;
 }
 
@@ -109,6 +116,7 @@ export const useUIStore = create<UIState>((set) => ({
   isSyncingFolder: null,
   lastSyncAt: null,
   isSyncing: false,
+  settingsAccountId: null,
 
   setTheme: (theme) => set({ theme }),
   toggleSidebar: () =>
@@ -163,6 +171,7 @@ export const useUIStore = create<UIState>((set) => ({
       return { emailBodyTheme: next };
     }),
   setSyncing: (isSyncing: boolean) => set({ isSyncing }),
+  setSettingsAccountId: (settingsAccountId: string | null) => set({ settingsAccountId }),
   setLastSyncAt: (lastSyncAt) => {
     setSetting("last_sync_at", String(lastSyncAt)).catch(() => {});
     set({ lastSyncAt });

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useUIStore } from "@/stores/uiStore";
 import { navigateToLabel, navigateToSettings } from "@/router/navigate";
-import { useAccountStore } from "@/stores/accountStore";
+import { useAccountStore, mailAccounts } from "@/stores/accountStore";
 import { getSetting, setSetting, getSecureSetting, setSecureSetting } from "@/services/db/settings";
 import { PROVIDER_MODELS } from "@/services/ai/types";
 import { deleteAccount } from "@/services/db/accounts";
@@ -39,6 +39,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { SignatureEditor } from "./SignatureEditor";
+import { SettingsAccountPicker } from "./SettingsAccountPicker";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { TemplateEditor } from "./TemplateEditor";
 import { FilterEditor } from "./FilterEditor";
 import { LabelEditor } from "./LabelEditor";
@@ -391,6 +393,11 @@ export function SettingsPage() {
           <ArrowLeft size={18} />
         </button>
         <h1 className="text-base font-semibold text-text-primary">Settings</h1>
+        {/* Signatures, templates, filters, labels and quick steps are stored
+            per account, so the page has to say which one it is editing. */}
+        <div className="ml-auto w-72 max-w-[50%]">
+          <SettingsAccountPicker />
+        </div>
       </div>
 
       {/* Body: sidebar nav + content */}
@@ -806,11 +813,11 @@ export function SettingsPage() {
                     </SettingRow>
                   </Section>
 
-                  <Section title="Signatures">
+                  <Section title="Signatures" scopedToAccount>
                     <SignatureEditor />
                   </Section>
 
-                  <Section title="Templates">
+                  <Section title="Templates" scopedToAccount>
                     <TemplateEditor />
                   </Section>
                 </>
@@ -818,35 +825,35 @@ export function SettingsPage() {
 
               {activeTab === "mail-rules" && (
                 <>
-                  <Section title="Labels">
+                  <Section title="Labels" scopedToAccount>
                     <p className="text-xs text-text-tertiary mb-3">
                       Create, rename, recolor, delete, or reorder your Gmail labels.
                     </p>
                     <LabelEditor />
                   </Section>
 
-                  <Section title="Filters">
+                  <Section title="Filters" scopedToAccount>
                     <p className="text-xs text-text-tertiary mb-3">
                       Filters automatically apply actions to new incoming emails during sync.
                     </p>
                     <FilterEditor />
                   </Section>
 
-                  <Section title="Smart Labels">
+                  <Section title="Smart Labels" scopedToAccount>
                     <p className="text-xs text-text-tertiary mb-3">
                       Describe what emails should get a label using plain English. AI automatically labels matching emails during sync.
                     </p>
                     <SmartLabelEditor />
                   </Section>
 
-                  <Section title="Smart Folders">
+                  <Section title="Smart Folders" scopedToAccount>
                     <p className="text-xs text-text-tertiary mb-3">
                       Smart folders are saved searches that automatically show matching emails. Use search operators like <code className="bg-bg-tertiary px-1 rounded">is:unread</code>, <code className="bg-bg-tertiary px-1 rounded">from:</code>, <code className="bg-bg-tertiary px-1 rounded">has:attachment</code>, <code className="bg-bg-tertiary px-1 rounded">after:</code>.
                     </p>
                     <SmartFolderEditor />
                   </Section>
 
-                  <Section title="Quick Steps">
+                  <Section title="Quick Steps" scopedToAccount>
                     <p className="text-xs text-text-tertiary mb-3">
                       Quick steps let you chain multiple actions together into a single click.
                       Apply them from the right-click menu on any thread.
@@ -865,7 +872,7 @@ export function SettingsPage() {
                     <ContactEditor />
                   </Section>
 
-                  <Section title="Subscriptions">
+                  <Section title="Subscriptions" scopedToAccount>
                     <p className="text-xs text-text-tertiary mb-3">
                       View all detected newsletter and promotional senders. Unsubscribe using RFC 8058 one-click POST, mailto, or browser fallback.
                     </p>
@@ -2227,14 +2234,18 @@ function SidebarNavEditor() {
 function Section({
   title,
   children,
+  scopedToAccount = false,
 }: {
   title: string;
   children: React.ReactNode;
+  /** Marks a section whose contents belong to one mailbox. */
+  scopedToAccount?: boolean;
 }) {
   return (
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
         {title}
+        {scopedToAccount && <ScopedAccountNote />}
       </h3>
       <div className="space-y-3">{children}</div>
     </div>
@@ -2404,5 +2415,22 @@ function ToggleRow({
         />
       </button>
     </div>
+  );
+}
+
+/**
+ * Appended to a section heading that only applies to one mailbox, so the
+ * answer to "which address is this for?" is next to the thing being edited
+ * rather than only in the page header.
+ */
+function ScopedAccountNote() {
+  const accounts = useAccountStore((s) => s.accounts);
+  const settingsAccountId = useSettingsAccountId();
+  const account = accounts.find((a) => a.id === settingsAccountId);
+  if (!account || mailAccounts(accounts).length < 2) return null;
+  return (
+    <span className="ml-2 normal-case tracking-normal text-text-secondary">
+      for {account.email}
+    </span>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { Trash2, Pencil } from "lucide-react";
-import { useAccountStore } from "@/stores/accountStore";
 import {
   getSmartFolders,
   insertSmartFolder,
@@ -11,7 +11,7 @@ import {
 import { useSmartFolderStore } from "@/stores/smartFolderStore";
 
 export function SmartFolderEditor() {
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = useSettingsAccountId();
   const reloadStore = useSmartFolderStore((s) => s.loadFolders);
   const [folders, setFolders] = useState<DbSmartFolder[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
