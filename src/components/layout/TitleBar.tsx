@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Minus, Square, X, Copy } from "lucide-react";
+import { SearchBar } from "@/components/search/SearchBar";
+import { LastSyncLine } from "./LastSyncLine";
 
 const isMac = navigator.userAgent.includes("Macintosh");
 
@@ -29,11 +31,19 @@ export function TitleBar() {
       data-tauri-drag-region
       className="flex items-center justify-between h-9 bg-sidebar-bg border-b border-border-primary select-none shrink-0"
     >
-      {/* App title — left side (extra padding on macOS for traffic light buttons) */}
-      <div data-tauri-drag-region className={`flex items-center gap-2 ${isMac ? "pl-20" : "pl-4"}`}>
-        <span data-tauri-drag-region className="text-xs font-semibold text-sidebar-text tracking-wide">
-          Revelo
-        </span>
+      {/* Search lives in the window chrome: it applies to the whole mailbox,
+          and the title bar already reserved this space for a label the sidebar
+          repeats. No drag region on this subtree, or the input cannot be
+          clicked. (macOS keeps room for the traffic lights.) */}
+      <div className={`flex min-w-0 flex-1 items-center gap-3 ${isMac ? "pl-20" : "pl-4"}`}>
+        <div className="w-full max-w-md">
+          <SearchBar compact />
+        </div>
+      </div>
+
+      {/* Last sync — right side, before the window controls */}
+      <div className="flex shrink-0 items-center pr-2">
+        <LastSyncLine collapsed={false} variant="titlebar" />
       </div>
 
       {/* Window controls — right side (hidden on macOS, uses native traffic lights) */}

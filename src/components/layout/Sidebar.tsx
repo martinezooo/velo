@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { SidebarBrand } from "./SidebarBrand";
-import { LastSyncLine } from "./LastSyncLine";
 import { useDroppable } from "@dnd-kit/core";
 import { AccountSwitcher } from "../accounts/AccountSwitcher";
 import { LabelForm } from "../labels/LabelForm";
@@ -610,8 +609,6 @@ export function Sidebar({ collapsed, onAddAccount }: SidebarProps) {
           </>
         )}
       </nav>
-
-      <LastSyncLine collapsed={collapsed} />
 
       {/* Bottom bar: Settings + collapse toggle */}
       <div className={`py-2 border-t border-border-primary flex ${collapsed ? "flex-col items-center gap-1 px-2" : "items-center gap-1 px-3"}`}>

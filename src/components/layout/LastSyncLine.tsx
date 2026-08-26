@@ -26,7 +26,13 @@ export function formatSyncAge(lastSyncAt: number, now: number): string {
  * "Syncing…" alone cannot distinguish a run in progress from one that quietly
  * stopped hours ago, so the resting state names the time instead.
  */
-export function LastSyncLine({ collapsed }: { collapsed: boolean }) {
+export function LastSyncLine({
+  collapsed,
+  variant = "sidebar",
+}: {
+  collapsed: boolean;
+  variant?: "sidebar" | "titlebar";
+}) {
   const lastSyncAt = useUIStore((s) => s.lastSyncAt);
   const isOnline = useUIStore((s) => s.isOnline);
   const [now, setNow] = useState(() => Date.now());
@@ -46,6 +52,20 @@ export function LastSyncLine({ collapsed }: { collapsed: boolean }) {
   const title = lastSyncAt !== null
     ? `Last sync: ${new Date(lastSyncAt).toLocaleString()}`
     : "No sync has completed yet";
+
+  if (variant === "titlebar") {
+    return (
+      <div
+        className="flex items-center gap-1.5 px-2 text-[0.6875rem] text-sidebar-text/45"
+        title={title}
+      >
+        {isOnline
+          ? <RefreshCw size={11} className="shrink-0" />
+          : <WifiOff size={11} className="shrink-0 text-warning/70" />}
+        <span className="whitespace-nowrap">{label}</span>
+      </div>
+    );
+  }
 
   if (collapsed) {
     return (

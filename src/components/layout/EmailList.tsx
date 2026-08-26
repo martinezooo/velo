@@ -2,7 +2,6 @@ import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { CSSTransition } from "react-transition-group";
 import { ThreadCard } from "../email/ThreadCard";
 import { CategoryTabs } from "../email/CategoryTabs";
-import { SearchBar } from "../search/SearchBar";
 import { EmailListSkeleton } from "../ui/Skeleton";
 import { useThreadStore, type Thread } from "@/stores/threadStore";
 import { useAccountStore, getViewAccountIds } from "@/stores/accountStore";
@@ -626,16 +625,12 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
       }`}
       style={!expanded && readingPanePosition === "right" && width ? { width } : undefined}
     >
-      {/* Search */}
-      <div className="px-3 py-2 border-b border-border-secondary">
-        <SearchBar />
-      </div>
-
-      {/* Header */}
-      <div className="px-4 py-2 border-b border-border-primary flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-semibold text-text-primary capitalize flex items-center gap-1.5">
-            {isSmartFolder && <FolderSearch size={14} className="text-accent shrink-0" />}
+      {/* Header — one line: what you are looking at, how much of it, and the
+          read filter. The count sits inline rather than on a second row. */}
+      <div className="px-4 py-2 border-b border-border-primary flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-text-primary capitalize flex items-center gap-1.5 min-w-0">
+          {isSmartFolder && <FolderSearch size={14} className="text-accent shrink-0" />}
+          <span className="truncate">
             {isSmartFolder
               ? activeSmartFolder?.name ?? "Smart Folder"
               : activeLabel === "inbox" && inboxViewMode === "split" && activeCategory !== "All"
@@ -645,15 +640,15 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
                 : LABEL_MAP[activeLabel] !== undefined
                   ? activeLabel
                   : userLabels.find((l) => l.id === activeLabel)?.name ?? activeLabel}
-          </h2>
-          <span className="text-xs text-text-tertiary">
-            {filteredThreads.length} conversation{filteredThreads.length !== 1 ? "s" : ""}
           </span>
-        </div>
+        </h2>
+        <span className="text-xs text-text-tertiary shrink-0 normal-case">
+          {filteredThreads.length}
+        </span>
         <select
           value={readFilter}
           onChange={(e) => setReadFilter(e.target.value as "all" | "read" | "unread")}
-          className="text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded border border-border-primary"
+          className="ml-auto shrink-0 text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded border border-border-primary"
         >
           <option value="all">All</option>
           <option value="unread">Unread</option>

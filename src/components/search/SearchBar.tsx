@@ -7,7 +7,10 @@ import { InputDialog } from "@/components/ui/InputDialog";
 import { Search, X, FolderPlus } from "lucide-react";
 import { makeThreadKey } from "@/utils/threadKey";
 
-export function SearchBar() {
+/**
+ * @param compact sized for the title bar, where vertical space is 36px total.
+ */
+export function SearchBar({ compact = false }: { compact?: boolean } = {}) {
   const searchQuery = useThreadStore((s) => s.searchQuery);
   const activeAccountId = useAccountStore((s) => s.activeAccountId);
   const unifiedInbox = useAccountStore((s) => s.unifiedInbox);
@@ -74,8 +77,10 @@ export function SearchBar() {
         value={searchQuery}
         onChange={(e) => handleChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Search... (from: to: has:attachment)"
-        className="w-full bg-bg-tertiary text-text-primary text-sm pl-8 pr-14 py-1.5 rounded-md border border-border-primary focus:border-accent focus:outline-none placeholder:text-text-tertiary"
+        placeholder={compact ? "Search mail" : "Search... (from: to: has:attachment)"}
+        className={`w-full bg-bg-tertiary text-text-primary pl-8 pr-14 rounded-md border border-border-primary focus:border-accent focus:outline-none placeholder:text-text-tertiary ${
+          compact ? "text-xs py-1" : "text-sm py-1.5"
+        }`}
       />
       {searchQuery && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
