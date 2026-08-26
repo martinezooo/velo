@@ -283,7 +283,7 @@ export default function App() {
 
         // Restore email body theme
         const savedBodyTheme = await getSetting("email_body_theme");
-        if (savedBodyTheme === "light" || savedBodyTheme === "dark") {
+        if (savedBodyTheme === "light" || savedBodyTheme === "dim" || savedBodyTheme === "dark") {
           ui.setEmailBodyTheme(savedBodyTheme);
         }
 

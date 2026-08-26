@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Minus, Square, X, Copy } from "lucide-react";
-import { SearchBar } from "@/components/search/SearchBar";
 import { LastSyncLine } from "./LastSyncLine";
+import { AiStatusChip } from "@/components/ui/AiStatusChip";
+import { BodyThemeSwitch } from "@/components/ui/BodyThemeSwitch";
+import logoUrl from "@/assets/logo.svg";
 
 const isMac = navigator.userAgent.includes("Macintosh");
 
@@ -31,18 +33,24 @@ export function TitleBar() {
       data-tauri-drag-region
       className="flex items-center justify-between h-9 bg-sidebar-bg border-b border-border-primary select-none shrink-0"
     >
-      {/* Search lives in the window chrome: it applies to the whole mailbox,
-          and the title bar already reserved this space for a label the sidebar
-          repeats. No drag region on this subtree, or the input cannot be
-          clicked. (macOS keeps room for the traffic lights.) */}
-      <div className={`flex min-w-0 flex-1 items-center gap-3 ${isMac ? "pl-20" : "pl-4"}`}>
-        <div className="w-full max-w-md">
-          <SearchBar compact />
-        </div>
+      {/* Brand — left side (macOS keeps room for the traffic lights) */}
+      <div
+        data-tauri-drag-region
+        className={`flex min-w-0 flex-1 items-center gap-2 ${isMac ? "pl-20" : "pl-4"}`}
+      >
+        <img src={logoUrl} alt="" aria-hidden="true" className="h-4 w-4 shrink-0 rounded-[5px]" />
+        <span
+          data-tauri-drag-region
+          className="text-xs font-semibold tracking-wide text-sidebar-text"
+        >
+          Revelo
+        </span>
       </div>
 
-      {/* Last sync — right side, before the window controls */}
-      <div className="flex shrink-0 items-center pr-2">
+      {/* Status cluster — no drag region, these are controls */}
+      <div className="flex shrink-0 items-center gap-1 pr-2">
+        <BodyThemeSwitch />
+        <AiStatusChip />
         <LastSyncLine collapsed={false} variant="titlebar" />
       </div>
 

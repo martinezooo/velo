@@ -216,11 +216,11 @@ export const HELP_CATEGORIES: HelpCategory[] = [
         title: "Light or dark message bodies",
         summary: "Stop HTML email flashing white in a dark app.",
         description:
-          "HTML email is authored against white backgrounds, so by default Revelo renders it light even when the rest of the app is dark. The sun/moon button in the message toolbar switches the body to dark, inverting the message and re-inverting photos and logos so they still look right. The choice is remembered and applies to every message you open. Plain-text mail always follows the app theme.",
+          "HTML email is authored against white backgrounds, so by default Revelo renders it as the sender intended. The brightness button in the title bar cycles three settings: bright, dimmed \u2014 same colours with the glare taken out \u2014 and dark, which inverts the message while re-inverting photos and logos so they still look right. The choice is remembered and applies to every message you open. Plain-text mail always follows the app theme.",
         tips: [
-          { text: "The toggle sits in the message toolbar, next to Print." },
+          { text: "The switch sits in the title bar, next to the AI status light." },
+          { text: "Dimmed is the gentler option: nothing is inverted, only darkened." },
           { text: "Photos and logos keep their real colours in dark mode." },
-          { text: "Some heavily styled newsletters still read better in light mode." },
         ],
       },
       {

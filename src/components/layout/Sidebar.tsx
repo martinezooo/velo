@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { SidebarBrand } from "./SidebarBrand";
 import { useDroppable } from "@dnd-kit/core";
 import { AccountSwitcher } from "../accounts/AccountSwitcher";
 import { LabelForm } from "../labels/LabelForm";
@@ -348,7 +347,6 @@ export function Sidebar({ collapsed, onAddAccount }: SidebarProps) {
         collapsed ? "w-16" : "w-60"
       }`}
     >
-      <SidebarBrand collapsed={collapsed} />
 
       {/* Compose button */}
       <div className="px-3 py-2">

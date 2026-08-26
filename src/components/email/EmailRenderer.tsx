@@ -40,6 +40,7 @@ export function EmailRenderer({
     || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   // Reader's explicit choice for the message body, independent of the app chrome
   const bodyDark = emailBodyTheme === "dark";
+  const bodyDim = emailBodyTheme === "dim";
 
   const shouldBlock = blockImages && !senderAllowlisted && !overrideShow;
 
@@ -135,6 +136,7 @@ export function EmailRenderer({
     // sender styles are inline and cannot be overridden reliably.
     const plainTextDark = (isDark || bodyDark) && isPlainText;
     const invertHtml = bodyDark && !isPlainText;
+    const dimHtml = bodyDim && !isPlainText;
     const htmlLightBackdrop = !isPlainText && !bodyDark;
     doc.write(`<!DOCTYPE html>
 <html>
@@ -162,6 +164,10 @@ export function EmailRenderer({
     }
     pre { overflow-x: auto; }
     table { max-width: 100%; }
+    ${dimHtml ? `
+    /* Keep the sender's colours, just stop the white from glaring */
+    html { background: #cfd3d6; }
+    body { filter: brightness(0.78) contrast(1.04); }` : ""}
     ${invertHtml ? `
     html { background: #0f172a; }
     body { filter: invert(1) hue-rotate(180deg); background: #ffffff; }

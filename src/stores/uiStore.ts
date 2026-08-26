@@ -8,7 +8,15 @@ type ReadFilter = "all" | "read" | "unread";
 export type EmailDensity = "compact" | "default" | "spacious";
 export type DefaultReplyMode = "reply" | "replyAll";
 export type MarkAsReadBehavior = "instant" | "2s" | "manual";
-export type EmailBodyTheme = "light" | "dark";
+/**
+ * How a message body is painted.
+ * - light: as the sender designed it, on white
+ * - dim:   same colours, brightness pulled down so white stops glaring
+ * - dark:  inverted, with photos and logos inverted back
+ */
+export type EmailBodyTheme = "light" | "dim" | "dark";
+
+export const EMAIL_BODY_THEMES: EmailBodyTheme[] = ["light", "dim", "dark"];
 export type FontScale = "small" | "default" | "large" | "xlarge";
 export type InboxViewMode = "unified" | "split";
 
@@ -141,12 +149,14 @@ export const useUIStore = create<UIState>((set) => ({
     setSetting("email_body_theme", emailBodyTheme).catch(() => {});
     set({ emailBodyTheme });
   },
+  // Cycles light → dim → dark → light
   toggleEmailBodyTheme: () =>
     set((state) => {
-      const emailBodyTheme: EmailBodyTheme =
-        state.emailBodyTheme === "light" ? "dark" : "light";
-      setSetting("email_body_theme", emailBodyTheme).catch(() => {});
-      return { emailBodyTheme };
+      const next = EMAIL_BODY_THEMES[
+        (EMAIL_BODY_THEMES.indexOf(state.emailBodyTheme) + 1) % EMAIL_BODY_THEMES.length
+      ]!;
+      setSetting("email_body_theme", next).catch(() => {});
+      return { emailBodyTheme: next };
     }),
   setLastSyncAt: (lastSyncAt) => {
     setSetting("last_sync_at", String(lastSyncAt)).catch(() => {});

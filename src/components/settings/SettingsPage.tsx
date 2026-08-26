@@ -1100,6 +1100,8 @@ export function SettingsPage() {
                           await setSetting("ai_provider", val);
                           const { clearProviderClients } = await import("@/services/ai/providerManager");
                           clearProviderClients();
+                          // Refresh the title-bar AI status light
+                          window.dispatchEvent(new Event("velo-ai-config-changed"));
                         }}
                         className="w-48 bg-bg-tertiary text-text-primary text-sm px-3 py-1.5 rounded-md border border-border-primary focus:border-accent outline-none"
                       >
@@ -1269,6 +1271,7 @@ export function SettingsPage() {
                                 await setSecureSetting(keySettingMap[aiProvider], keyValue);
                                 const { clearProviderClients } = await import("@/services/ai/providerManager");
                                 clearProviderClients();
+                                window.dispatchEvent(new Event("velo-ai-config-changed"));
                               }
                               setAiKeySaved(true);
                               setTimeout(() => setAiKeySaved(false), 2000);

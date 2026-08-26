@@ -2,6 +2,7 @@ import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { CSSTransition } from "react-transition-group";
 import { ThreadCard } from "../email/ThreadCard";
 import { CategoryTabs } from "../email/CategoryTabs";
+import { SearchBar } from "../search/SearchBar";
 import { EmailListSkeleton } from "../ui/Skeleton";
 import { useThreadStore, type Thread } from "@/stores/threadStore";
 import { useAccountStore, getViewAccountIds } from "@/stores/accountStore";
@@ -664,6 +665,11 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
           unreadCounts={Object.fromEntries(categoryUnreadCounts)}
         />
       )}
+
+      {/* Search sits directly above the rows it filters */}
+      <div className="px-3 py-2 border-b border-border-secondary">
+        <SearchBar />
+      </div>
 
       {/* Multi-select action bar */}
       <CSSTransition nodeRef={multiSelectBarRef} in={multiSelectCount > 0} timeout={150} classNames="slide-down" unmountOnExit>
