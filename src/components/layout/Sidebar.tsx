@@ -351,8 +351,6 @@ export function Sidebar({ collapsed, onAddAccount }: SidebarProps) {
     >
       <SidebarBrand collapsed={collapsed} />
 
-      <AccountSwitcher collapsed={collapsed} onAddAccount={onAddAccount} />
-
       {/* Compose button */}
       <div className="px-3 py-2">
         <button
@@ -426,6 +424,14 @@ export function Sidebar({ collapsed, onAddAccount }: SidebarProps) {
                   </>
                 )}
               </DroppableNavItem>
+              {/* Which mailboxes the inbox is reading from */}
+              {isInbox && (
+                <AccountSwitcher
+                  collapsed={collapsed}
+                  onAddAccount={onAddAccount}
+                  variant="inline"
+                />
+              )}
               {/* Category sub-items when split mode is active */}
               {isInbox && inboxViewMode === "split" && !collapsed && (
                 <div>

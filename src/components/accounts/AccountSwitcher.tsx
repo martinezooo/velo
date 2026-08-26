@@ -6,11 +6,19 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 interface AccountSwitcherProps {
   collapsed: boolean;
   onAddAccount: () => void;
+  /**
+   * "block" is the standalone header card. "inline" is the compact line that
+   * sits under the Inbox row, where the scope belongs — picking which mailbox
+   * you are reading is a property of the inbox, not of the whole window, and
+   * folding it in there buys back the header's vertical space.
+   */
+  variant?: "block" | "inline";
 }
 
 export function AccountSwitcher({
   collapsed,
   onAddAccount,
+  variant = "block",
 }: AccountSwitcherProps) {
   const { accounts, activeAccountId, unifiedInbox, setActiveAccount, setUnifiedInbox } =
     useAccountStore();
@@ -60,42 +68,7 @@ export function AccountSwitcher({
     );
   }
 
-  return (
-    <div className="relative p-2" ref={dropdownRef}>
-      {/* Trigger button */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={`flex items-center w-full rounded-lg p-1.5 hover:bg-sidebar-hover transition-colors ${
-          collapsed ? "justify-center" : "gap-2.5"
-        } ${open ? "bg-sidebar-hover" : ""}`}
-      >
-        {unifiedInbox ? <UnifiedAvatar /> : <ActiveAvatar account={activeAccount} />}
-        {!collapsed && (unifiedInbox || activeAccount) && (
-          <>
-            <div className="flex-1 min-w-0 text-left">
-              <div className="text-sm font-medium text-sidebar-text truncate leading-tight">
-                {unifiedInbox
-                  ? "All inboxes"
-                  : activeAccount!.displayName || activeAccount!.email.split("@")[0]}
-              </div>
-              <div className="text-xs text-sidebar-text/50 truncate leading-tight">
-                {unifiedInbox
-                  ? `${mailAccounts(accounts).length} accounts`
-                  : activeAccount!.email}
-              </div>
-            </div>
-            <ChevronDown
-              size={14}
-              className={`shrink-0 text-sidebar-text/40 transition-transform duration-200 ${
-                open ? "rotate-180" : ""
-              }`}
-            />
-          </>
-        )}
-      </button>
-
-      {/* Dropdown */}
-      {open && (
+  const renderDropdown = () => (
         <div
           className={`absolute z-50 mt-1 py-1 rounded-lg border border-border-primary bg-bg-primary shadow-lg glass-panel ${
             collapsed ? "left-full ml-1 top-0 w-64" : "left-2 right-2"
@@ -177,7 +150,75 @@ export function AccountSwitcher({
             <span>Add account</span>
           </button>
         </div>
-      )}
+  );
+
+  if (variant === "inline") {
+    const scopeLabel = unifiedInbox
+      ? "All inboxes"
+      : activeAccount?.email ?? "No account";
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          title={unifiedInbox ? `All inboxes — ${mailAccounts(accounts).length} accounts` : scopeLabel}
+          className={`flex items-center w-full transition-colors rounded-md ${
+            collapsed ? "justify-center py-1.5" : "gap-1.5 py-1 pl-7 pr-3"
+          } text-[0.75rem] text-sidebar-text/55 hover:text-sidebar-text hover:bg-sidebar-hover`}
+        >
+          {unifiedInbox
+            ? <Layers size={12} className="shrink-0 text-accent" />
+            : <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />}
+          {!collapsed && (
+            <>
+              <span className="flex-1 truncate text-left">{scopeLabel}</span>
+              <ChevronDown
+                size={12}
+                className={`shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+              />
+            </>
+          )}
+        </button>
+        {open && renderDropdown()}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative p-2" ref={dropdownRef}>
+      {/* Trigger button */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center w-full rounded-lg p-1.5 hover:bg-sidebar-hover transition-colors ${
+          collapsed ? "justify-center" : "gap-2.5"
+        } ${open ? "bg-sidebar-hover" : ""}`}
+      >
+        {unifiedInbox ? <UnifiedAvatar /> : <ActiveAvatar account={activeAccount} />}
+        {!collapsed && (unifiedInbox || activeAccount) && (
+          <>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="text-sm font-medium text-sidebar-text truncate leading-tight">
+                {unifiedInbox
+                  ? "All inboxes"
+                  : activeAccount!.displayName || activeAccount!.email.split("@")[0]}
+              </div>
+              <div className="text-xs text-sidebar-text/50 truncate leading-tight">
+                {unifiedInbox
+                  ? `${mailAccounts(accounts).length} accounts`
+                  : activeAccount!.email}
+              </div>
+            </div>
+            <ChevronDown
+              size={14}
+              className={`shrink-0 text-sidebar-text/40 transition-transform duration-200 ${
+                open ? "rotate-180" : ""
+              }`}
+            />
+          </>
+        )}
+      </button>
+
+      {/* Dropdown */}
+      {open && renderDropdown()}
     </div>
   );
 }

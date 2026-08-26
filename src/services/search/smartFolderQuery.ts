@@ -1,4 +1,5 @@
 import { parseSearchQuery } from "./searchParser";
+import { decodeHtmlEntities } from "@/utils/sanitize";
 import { buildSearchQuery } from "./searchQueryBuilder";
 import { getThreadLabelIds, getThreadById } from "@/services/db/threads";
 import type { Thread } from "@/stores/threadStore";
@@ -114,8 +115,8 @@ export async function mapSmartFolderRows(rows: SmartFolderRow[]): Promise<Thread
       return {
         id: r.thread_id,
         accountId: r.account_id,
-        subject: r.subject,
-        snippet: r.snippet,
+        subject: decodeHtmlEntities(r.subject),
+        snippet: decodeHtmlEntities(r.snippet),
         lastMessageAt: r.date,
         messageCount: dbThread?.message_count ?? 1,
         isRead: dbThread ? dbThread.is_read === 1 : false,

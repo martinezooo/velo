@@ -30,6 +30,9 @@ interface UIState {
   /** How message bodies are rendered. HTML mail is authored for white
    *  backgrounds, so it stays light unless the reader forces dark. */
   emailBodyTheme: EmailBodyTheme;
+  /** Fetch sender avatars from Gravatar. Off means initials only, and no
+   *  request leaves the machine for them. */
+  showSenderAvatars: boolean;
   fontScale: FontScale;
   colorTheme: ColorThemeId;
   sendAndArchive: boolean;
@@ -53,6 +56,7 @@ interface UIState {
   setDefaultReplyMode: (mode: DefaultReplyMode) => void;
   setMarkAsReadBehavior: (behavior: MarkAsReadBehavior) => void;
   setEmailBodyTheme: (theme: EmailBodyTheme) => void;
+  setShowSenderAvatars: (enabled: boolean) => void;
   toggleEmailBodyTheme: () => void;
   setFontScale: (scale: FontScale) => void;
   setColorTheme: (theme: ColorThemeId) => void;
@@ -81,6 +85,7 @@ export const useUIStore = create<UIState>((set) => ({
   defaultReplyMode: "reply",
   markAsReadBehavior: "instant",
   emailBodyTheme: "light",
+  showSenderAvatars: true,
   fontScale: "default",
   colorTheme: "sage",
   sendAndArchive: false,
@@ -127,6 +132,10 @@ export const useUIStore = create<UIState>((set) => ({
   setDefaultReplyMode: (defaultReplyMode) => {
     setSetting("default_reply_mode", defaultReplyMode).catch(() => {});
     set({ defaultReplyMode });
+  },
+  setShowSenderAvatars: (showSenderAvatars) => {
+    setSetting("show_sender_avatars", showSenderAvatars ? "true" : "false").catch(() => {});
+    set({ showSenderAvatars });
   },
   setEmailBodyTheme: (emailBodyTheme) => {
     setSetting("email_body_theme", emailBodyTheme).catch(() => {});

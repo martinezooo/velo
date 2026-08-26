@@ -270,6 +270,12 @@ export default function App() {
           useUIStore.setState({ lastSyncAt: parsedLastSync });
         }
 
+        // Restore sender avatars
+        const savedAvatars = await getSetting("show_sender_avatars");
+        if (savedAvatars === "false") {
+          ui.setShowSenderAvatars(false);
+        }
+
         // Restore email body theme
         const savedBodyTheme = await getSetting("email_body_theme");
         if (savedBodyTheme === "light" || savedBodyTheme === "dark") {

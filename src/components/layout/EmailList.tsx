@@ -11,6 +11,7 @@ import { useActiveLabel, useSelectedThreadKey, useActiveCategory } from "@/hooks
 import { navigateToThread, navigateToLabel } from "@/router/navigate";
 import { getThreadsForAccounts, getThreadsForCategoryAcrossAccounts, getThreadLabelIds, deleteThread as deleteThreadFromDb } from "@/services/db/threads";
 import { threadKeyOf, makeThreadKey, groupKeysByAccount } from "@/utils/threadKey";
+import { decodeHtmlEntities } from "@/utils/sanitize";
 import { getCategoriesForThreads, getCategoryUnreadCounts } from "@/services/db/threadCategories";
 import { getActiveFollowUpThreadIds } from "@/services/db/followUpReminders";
 import { getBundleRules, getHeldThreadIds, getBundleSummaries, type DbBundleRule } from "@/services/db/bundleRules";
@@ -298,8 +299,8 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
         return {
           id: t.id,
           accountId: t.account_id,
-          subject: t.subject,
-          snippet: t.snippet,
+          subject: decodeHtmlEntities(t.subject),
+          snippet: decodeHtmlEntities(t.snippet),
           lastMessageAt: t.last_message_at ?? 0,
           messageCount: t.message_count,
           isRead: t.is_read === 1,

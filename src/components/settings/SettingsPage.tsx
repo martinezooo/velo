@@ -79,6 +79,8 @@ const tabs: { id: SettingsTab; label: string; icon: LucideIcon }[] = [
 
 export function SettingsPage() {
   const theme = useUIStore((s) => s.theme);
+  const showSenderAvatars = useUIStore((s) => s.showSenderAvatars);
+  const setShowSenderAvatars = useUIStore((s) => s.setShowSenderAvatars);
   const setTheme = useUIStore((s) => s.setTheme);
   const readingPanePosition = useUIStore((s) => s.readingPanePosition);
   const setReadingPanePosition = useUIStore((s) => s.setReadingPanePosition);
@@ -535,6 +537,12 @@ export function SettingsPage() {
                   </Section>
 
                   <Section title="Privacy & Security">
+                    <ToggleRow
+                      label="Show sender avatars"
+                      description="Loads sender pictures from Gravatar. Turning this off draws initials only and sends no request for them."
+                      checked={showSenderAvatars}
+                      onToggle={() => setShowSenderAvatars(!showSenderAvatars)}
+                    />
                     <ToggleRow
                       label="Block remote images"
                       description="Hides tracking pixels and remote images until you choose to load them"

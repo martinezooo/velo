@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { decodeHtmlEntities } from "@/utils/sanitize";
 import { makeThreadKey } from "@/utils/threadKey";
 import {
   Mail, Clock, X, Send, Copy, Star, UserPlus, Check, PenLine,
@@ -59,8 +60,8 @@ export function ContactSidebar({ email, name, accountId, onClose }: ContactSideb
     const mapped = {
       id: dbThread.id,
       accountId: dbThread.account_id,
-      subject: dbThread.subject,
-      snippet: dbThread.snippet,
+      subject: decodeHtmlEntities(dbThread.subject),
+      snippet: decodeHtmlEntities(dbThread.snippet),
       lastMessageAt: dbThread.last_message_at ?? 0,
       messageCount: dbThread.message_count,
       isRead: dbThread.is_read === 1,
