@@ -93,7 +93,7 @@ export async function initNotifications(): Promise<void> {
       } else {
         await showAndFocusMainWindow();
         if (ctx?.threadId) {
-          navigateToLabel("inbox", { threadId: ctx.threadId });
+          navigateToLabel("inbox", { threadId: ctx.threadId, accountId: ctx.accountId });
         }
       }
     });

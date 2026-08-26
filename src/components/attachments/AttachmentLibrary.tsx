@@ -178,10 +178,10 @@ export function AttachmentLibrary() {
   }, [accountId]);
 
   const handleJumpToEmail = useCallback((att: AttachmentWithContext) => {
-    if (att.thread_id) {
-      navigateToLabel("all", { threadId: att.thread_id });
+    if (att.thread_id && accountId) {
+      navigateToLabel("all", { threadId: att.thread_id, accountId });
     }
-  }, []);
+  }, [accountId]);
 
   // Track search input ref to avoid autofocus stealing
   const searchRef = useRef<HTMLInputElement>(null);

@@ -12,7 +12,7 @@ const SYSTEM_LABELS = new Set([
  */
 export function navigateToLabel(
   label: string,
-  opts?: { category?: string; threadId?: string },
+  opts?: { category?: string; threadId?: string; accountId?: string },
 ): void {
   if (label === "settings") {
     router.navigate({ to: "/settings/$tab", params: { tab: "general" } });
@@ -39,12 +39,18 @@ export function navigateToLabel(
     return;
   }
 
+  // Carry the owning account so the thread stays resolvable in "All inboxes"
+  const threadSearch: Record<string, string> = opts?.accountId
+    ? { acct: opts.accountId }
+    : {};
+
   if (label.startsWith("smart-folder:")) {
     const folderId = label.replace("smart-folder:", "");
     if (opts?.threadId) {
       router.navigate({
         to: "/smart-folder/$folderId/thread/$threadId",
         params: { folderId, threadId: opts.threadId },
+        search: threadSearch,
       });
     } else {
       router.navigate({
@@ -56,7 +62,7 @@ export function navigateToLabel(
   }
 
   if (SYSTEM_LABELS.has(label)) {
-    const search: Record<string, string> = {};
+    const search: Record<string, string> = { ...threadSearch };
     if (opts?.category) search["category"] = opts.category;
     if (opts?.threadId) {
       router.navigate({
@@ -79,6 +85,7 @@ export function navigateToLabel(
     router.navigate({
       to: "/label/$labelId/thread/$threadId",
       params: { labelId: label, threadId: opts.threadId },
+      search: threadSearch,
     });
   } else {
     router.navigate({

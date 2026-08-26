@@ -72,11 +72,21 @@ describe("navigate", () => {
       });
     });
 
+    it("should carry the owning account into ?acct= when opening a thread", () => {
+      navigateToLabel("all", { threadId: "t-1", accountId: "acc-2" });
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: "/mail/$label/thread/$threadId",
+        params: { label: "all", threadId: "t-1" },
+        search: { acct: "acc-2" },
+      });
+    });
+
     it("should navigate to smart folder with thread", () => {
       navigateToLabel("smart-folder:folder-1", { threadId: "t-1" });
       expect(mockNavigate).toHaveBeenCalledWith({
         to: "/smart-folder/$folderId/thread/$threadId",
         params: { folderId: "folder-1", threadId: "t-1" },
+        search: {},
       });
     });
 
@@ -93,6 +103,7 @@ describe("navigate", () => {
       expect(mockNavigate).toHaveBeenCalledWith({
         to: "/label/$labelId/thread/$threadId",
         params: { labelId: "Label_123", threadId: "t-1" },
+        search: {},
       });
     });
 

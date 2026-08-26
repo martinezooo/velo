@@ -47,8 +47,8 @@ export function AskInbox({ isOpen, onClose }: AskInboxProps) {
     [handleAsk, onClose],
   );
 
-  const handleNavigateToThread = useCallback((threadId: string) => {
-    navigateToLabel("all", { threadId });
+  const handleNavigateToThread = useCallback((threadId: string, accountId: string) => {
+    navigateToLabel("all", { threadId, accountId });
     onClose();
   }, [onClose]);
 
@@ -123,7 +123,7 @@ export function AskInbox({ isOpen, onClose }: AskInboxProps) {
                     {result.sourceMessages.slice(0, 5).map((msg) => (
                       <button
                         key={msg.message_id}
-                        onClick={() => handleNavigateToThread(msg.thread_id)}
+                        onClick={() => handleNavigateToThread(msg.thread_id, msg.account_id)}
                         className="w-full text-left px-3 py-2 rounded-md bg-bg-secondary hover:bg-bg-hover transition-colors group"
                       >
                         <div className="flex items-center justify-between">
