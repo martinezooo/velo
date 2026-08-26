@@ -4,14 +4,14 @@ import { useUIStore } from "@/stores/uiStore";
 import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 
 /**
- * Names the mailbox that the account-scoped settings below apply to.
+ * Names, and lets you change, the mailbox a section's settings belong to.
  *
- * Signatures, templates, filters, labels and quick steps are stored per
- * account. Without this the page silently edited whichever account happened to
- * be active — invisible with one account, a trap with several.
+ * Rendered only on sections that are genuinely per-account — signatures,
+ * templates, filters and the like — rather than once for the whole page, which
+ * would imply everything in Settings is account-scoped when most of it is not.
  *
- * Changing it here does not change the mail being read; it only retargets the
- * settings, so opening Settings cannot move the inbox out from under you.
+ * Changing it retargets the settings only; the mail being read is unaffected,
+ * so opening Settings cannot move the inbox out from under you.
  */
 export function SettingsAccountPicker() {
   const accounts = useAccountStore((s) => s.accounts);
@@ -23,13 +23,14 @@ export function SettingsAccountPicker() {
   if (mail.length < 2) return null;
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border-primary bg-bg-tertiary/50 px-3 py-2">
-      <Mail size={13} className="shrink-0 text-accent" />
-      <span className="shrink-0 text-xs text-text-secondary">Editing settings for</span>
+    <label className="ml-auto flex min-w-0 items-center gap-1.5">
+      <Mail size={12} className="shrink-0 text-accent" aria-hidden="true" />
+      <span className="sr-only">Mailbox these settings apply to</span>
       <select
         value={settingsAccountId ?? ""}
         onChange={(e) => setSettingsAccountId(e.target.value || null)}
-        className="min-w-0 flex-1 rounded border border-border-primary bg-bg-tertiary px-2 py-1 text-xs text-text-primary outline-none focus:border-accent"
+        title="Mailbox these settings apply to"
+        className="min-w-0 max-w-[16rem] truncate rounded border border-border-primary bg-bg-tertiary px-1.5 py-0.5 text-[0.6875rem] text-text-secondary outline-none focus:border-accent"
       >
         {mail.map((account) => (
           <option key={account.id} value={account.id}>
@@ -37,6 +38,6 @@ export function SettingsAccountPicker() {
           </option>
         ))}
       </select>
-    </div>
+    </label>
   );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useUIStore } from "@/stores/uiStore";
 import { navigateToLabel, navigateToSettings } from "@/router/navigate";
-import { useAccountStore, mailAccounts } from "@/stores/accountStore";
+import { useAccountStore } from "@/stores/accountStore";
 import { getSetting, setSetting, getSecureSetting, setSecureSetting } from "@/services/db/settings";
 import { PROVIDER_MODELS } from "@/services/ai/types";
 import { deleteAccount } from "@/services/db/accounts";
@@ -40,7 +40,6 @@ import {
 } from "lucide-react";
 import { SignatureEditor } from "./SignatureEditor";
 import { SettingsAccountPicker } from "./SettingsAccountPicker";
-import { useSettingsAccountId } from "@/hooks/useSettingsAccountId";
 import { TemplateEditor } from "./TemplateEditor";
 import { FilterEditor } from "./FilterEditor";
 import { LabelEditor } from "./LabelEditor";
@@ -393,11 +392,6 @@ export function SettingsPage() {
           <ArrowLeft size={18} />
         </button>
         <h1 className="text-base font-semibold text-text-primary">Settings</h1>
-        {/* Signatures, templates, filters, labels and quick steps are stored
-            per account, so the page has to say which one it is editing. */}
-        <div className="ml-auto w-72 max-w-[50%]">
-          <SettingsAccountPicker />
-        </div>
       </div>
 
       {/* Body: sidebar nav + content */}
@@ -2243,10 +2237,12 @@ function Section({
 }) {
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
-        {title}
-        {scopedToAccount && <ScopedAccountNote />}
-      </h3>
+      <div className="mb-3 flex items-center gap-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+          {title}
+        </h3>
+        {scopedToAccount && <SettingsAccountPicker />}
+      </div>
       <div className="space-y-3">{children}</div>
     </div>
   );
@@ -2418,19 +2414,3 @@ function ToggleRow({
   );
 }
 
-/**
- * Appended to a section heading that only applies to one mailbox, so the
- * answer to "which address is this for?" is next to the thing being edited
- * rather than only in the page header.
- */
-function ScopedAccountNote() {
-  const accounts = useAccountStore((s) => s.accounts);
-  const settingsAccountId = useSettingsAccountId();
-  const account = accounts.find((a) => a.id === settingsAccountId);
-  if (!account || mailAccounts(accounts).length < 2) return null;
-  return (
-    <span className="ml-2 normal-case tracking-normal text-text-secondary">
-      for {account.email}
-    </span>
-  );
-}
