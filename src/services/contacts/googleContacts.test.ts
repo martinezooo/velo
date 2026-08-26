@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { realPhotoUrl, personEmails } from "./googleContacts";
+import { realPhotoUrl, personEmails, isInsufficientScope } from "./googleContacts";
 
 describe("googleContacts", () => {
   it("takes a real photo", () => {
@@ -49,5 +49,16 @@ describe("googleContacts", () => {
   it("skips entries that are not addresses", () => {
     expect(personEmails({ emailAddresses: [{ value: "not-an-address" }, {}] })).toEqual([]);
     expect(personEmails({})).toEqual([]);
+  });
+
+  it("recognises a grant that predates the contacts scopes", () => {
+    // Retrying cannot fix this; only re-authorising can, so it must be told apart
+    expect(isInsufficientScope(new Error("Request had insufficient authentication scopes"))).toBe(true);
+    expect(isInsufficientScope(new Error("403 PERMISSION_DENIED"))).toBe(true);
+  });
+
+  it("does not mistake ordinary failures for a missing scope", () => {
+    expect(isInsufficientScope(new Error("Failed to fetch"))).toBe(false);
+    expect(isInsufficientScope(new Error("429 rate limit"))).toBe(false);
   });
 });

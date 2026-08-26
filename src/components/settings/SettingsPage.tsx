@@ -36,6 +36,7 @@ import {
   ChevronDown,
   RotateCcw,
   type LucideIcon,
+  AlertTriangle,
 } from "lucide-react";
 import { SignatureEditor } from "./SignatureEditor";
 import { TemplateEditor } from "./TemplateEditor";
@@ -144,6 +145,7 @@ export function SettingsPage() {
   const [reauthStatus, setReauthStatus] = useState<Record<string, "idle" | "authorizing" | "done" | "error">>({});
   const [resyncStatus, setResyncStatus] = useState<Record<string, "idle" | "syncing" | "done" | "error">>({});
   const [showMailboxUsage, setShowMailboxUsage] = useState(false);
+  const [contactScopeMissing, setContactScopeMissing] = useState(false);
   const [mailboxUsage, setMailboxUsage] = useState<Map<string, MailboxUsage>>(() => new Map());
   const [autoArchiveCategories, setAutoArchiveCategories] = useState<Set<string>>(() => new Set());
   const [smartNotifications, setSmartNotifications] = useState(true);
@@ -162,6 +164,9 @@ export function SettingsPage() {
       setClientId(id ?? "");
       const secret = await getSecureSetting("google_client_secret");
       setClientSecret(secret ?? "");
+      const scopeSetting = await getSetting("google_contacts_scope_missing");
+      setContactScopeMissing(scopeSetting === "true");
+
       const usageSetting = await getSetting("show_mailbox_usage");
       setShowMailboxUsage(usageSetting === "true");
       if (usageSetting === "true") {
@@ -332,6 +337,12 @@ export function SettingsPage() {
       try {
         await reauthorizeAccount(accountId, email);
         setReauthStatus((prev) => ({ ...prev, [accountId]: "done" }));
+        // The new grant may include contact photos — fetch immediately rather
+        // than waiting a day for the next scheduled pass.
+        setContactScopeMissing(false);
+        import("@/services/contacts/googleContacts")
+          .then(({ syncGoogleContactPhotos }) => syncGoogleContactPhotos(accountId, true))
+          .catch(() => {});
         setTimeout(() => {
           setReauthStatus((prev) => ({ ...prev, [accountId]: "idle" }));
         }, 3000);
@@ -866,6 +877,20 @@ export function SettingsPage() {
               {activeTab === "accounts" && (
                 <>
                   <Section title="Mail Accounts">
+                    {contactScopeMissing && (
+                      <div className="mb-3 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3">
+                        <AlertTriangle size={14} className="mt-0.5 shrink-0 text-warning" />
+                        <div className="text-xs text-text-secondary">
+                          <span className="font-medium text-text-primary">
+                            Sender photos need permission.
+                          </span>{" "}
+                          These accounts were connected before Revelo asked to read
+                          contact photos, so Google is refusing the request. Use
+                          Re-authorize below and approve the contacts permission —
+                          nothing else changes.
+                        </div>
+                      </div>
+                    )}
                     <ToggleRow
                       label="Show mailbox usage"
                       description="Size, message and conversation counts per account, measured from what has been synced to this machine"

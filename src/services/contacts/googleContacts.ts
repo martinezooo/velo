@@ -37,11 +37,26 @@ interface PeopleResponse {
 }
 
 const LAST_RUN_SETTING = "google_contacts_synced_at";
+/** Set when the grant predates the contacts scopes, so the UI can ask. */
+export const SCOPE_MISSING_SETTING = "google_contacts_scope_missing";
 /** Photos change rarely; a day between passes is plenty. */
 const MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const PAGE_SIZE = 200;
 /** Bound on pages per collection, so a huge address book cannot spin. */
 const MAX_PAGES = 10;
+
+/**
+ * True when the failure is "this token was issued before the app asked for
+ * contacts", which no amount of retrying fixes — only re-authorising does.
+ */
+export function isInsufficientScope(err: unknown): boolean {
+  const raw = err instanceof Error ? err.message : String(err ?? "");
+  const lower = raw.toLowerCase();
+  return lower.includes("insufficient")
+    || lower.includes("403")
+    || lower.includes("permission_denied")
+    || lower.includes("request had insufficient authentication scopes");
+}
 
 /** A usable photo URL, or null when Google only offered its placeholder. */
 export function realPhotoUrl(person: GooglePerson): string | null {
@@ -112,6 +127,8 @@ export async function syncGoogleContactPhotos(
   }
 
   let stored = 0;
+  let scopeMissing = false;
+
   try {
     stored += await fetchCollection(
       accountId,
@@ -122,6 +139,7 @@ export async function syncGoogleContactPhotos(
       (res) => res.connections,
     );
   } catch (err) {
+    if (isInsufficientScope(err)) scopeMissing = true;
     console.warn("[googleContacts] connections unavailable:", err);
   }
 
@@ -135,8 +153,14 @@ export async function syncGoogleContactPhotos(
       (res) => res.otherContacts,
     );
   } catch (err) {
+    if (isInsufficientScope(err)) scopeMissing = true;
     console.warn("[googleContacts] otherContacts unavailable:", err);
   }
+
+  // Surfaced in Settings, because nothing else can tell the user that a
+  // silent no-op is waiting on one click
+  await setSetting(SCOPE_MISSING_SETTING, scopeMissing ? "true" : "false");
+  if (scopeMissing) window.dispatchEvent(new Event("velo-google-scope-missing"));
 
   await setSetting(LAST_RUN_SETTING, String(Date.now()));
   if (stored > 0) {
