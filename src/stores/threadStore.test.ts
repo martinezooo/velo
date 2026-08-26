@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useThreadStore, type Thread } from "./threadStore";
+import { makeThreadKey } from "@/utils/threadKey";
+
+// Threads are addressed by composite account+thread keys, not bare thread IDs
+const k1 = makeThreadKey("acc-1", "thread-1");
+const k2 = makeThreadKey("acc-1", "thread-2");
+const k3 = makeThreadKey("acc-1", "thread-3");
 
 const mockThread: Thread = {
   id: "thread-1",
@@ -60,12 +66,12 @@ describe("threadStore", () => {
 
   it("should select a thread", () => {
     useThreadStore.getState().setThreads([mockThread]);
-    useThreadStore.getState().selectThread("thread-1");
-    expect(useThreadStore.getState().selectedThreadId).toBe("thread-1");
+    useThreadStore.getState().selectThread(k1);
+    expect(useThreadStore.getState().selectedThreadId).toBe(k1);
   });
 
   it("should deselect a thread", () => {
-    useThreadStore.getState().selectThread("thread-1");
+    useThreadStore.getState().selectThread(k1);
     useThreadStore.getState().selectThread(null);
     expect(useThreadStore.getState().selectedThreadId).toBeNull();
   });
@@ -80,8 +86,8 @@ describe("threadStore", () => {
     useThreadStore.getState().selectAll();
     const state = useThreadStore.getState();
     expect(state.selectedThreadIds.size).toBe(2);
-    expect(state.selectedThreadIds.has("thread-1")).toBe(true);
-    expect(state.selectedThreadIds.has("thread-2")).toBe(true);
+    expect(state.selectedThreadIds.has(k1)).toBe(true);
+    expect(state.selectedThreadIds.has(k2)).toBe(true);
   });
 
   it("should select all threads from the selected thread onward", () => {
@@ -91,14 +97,14 @@ describe("threadStore", () => {
       subject: "Third Thread",
     };
     useThreadStore.getState().setThreads([mockThread, mockThread2, mockThread3]);
-    useThreadStore.getState().selectThread("thread-2");
+    useThreadStore.getState().selectThread(k2);
     useThreadStore.getState().selectAllFromHere();
     const state = useThreadStore.getState();
     // Should select thread-2 and thread-3 (from index 1 onward)
     expect(state.selectedThreadIds.size).toBe(2);
-    expect(state.selectedThreadIds.has("thread-2")).toBe(true);
-    expect(state.selectedThreadIds.has("thread-3")).toBe(true);
-    expect(state.selectedThreadIds.has("thread-1")).toBe(false);
+    expect(state.selectedThreadIds.has(k2)).toBe(true);
+    expect(state.selectedThreadIds.has(k3)).toBe(true);
+    expect(state.selectedThreadIds.has(k1)).toBe(false);
   });
 
   it("should select all from beginning when no thread is selected", () => {
@@ -116,9 +122,9 @@ describe("threadStore", () => {
     };
     useThreadStore.getState().setThreads([mockThread, mockThread2, mockThread3]);
     // Select thread-2 as the current thread
-    useThreadStore.getState().selectThread("thread-2");
+    useThreadStore.getState().selectThread(k2);
     // Manually add thread-1 to multi-select (after selectThread since it clears multiselect)
-    useThreadStore.getState().toggleThreadSelection("thread-1");
+    useThreadStore.getState().toggleThreadSelection(k1);
     // Now selectAllFromHere should merge with the existing selection
     useThreadStore.getState().selectAllFromHere();
     const state = useThreadStore.getState();
@@ -131,8 +137,8 @@ describe("threadStore", () => {
       useThreadStore.getState().setThreads([mockThread, mockThread2]);
       const { threadMap } = useThreadStore.getState();
       expect(threadMap.size).toBe(2);
-      expect(threadMap.get("thread-1")).toBe(useThreadStore.getState().threads[0]);
-      expect(threadMap.get("thread-2")).toBe(useThreadStore.getState().threads[1]);
+      expect(threadMap.get(k1)).toBe(useThreadStore.getState().threads[0]);
+      expect(threadMap.get(k2)).toBe(useThreadStore.getState().threads[1]);
     });
 
     it("should return undefined for non-existent thread in threadMap", () => {
@@ -142,28 +148,28 @@ describe("threadStore", () => {
 
     it("should update threadMap when updating a thread", () => {
       useThreadStore.getState().setThreads([mockThread, mockThread2]);
-      useThreadStore.getState().updateThread("thread-1", { isRead: true });
+      useThreadStore.getState().updateThread(k1, { isRead: true });
       const { threadMap } = useThreadStore.getState();
-      expect(threadMap.get("thread-1")?.isRead).toBe(true);
-      expect(threadMap.get("thread-2")?.isRead).toBe(true); // was already true
+      expect(threadMap.get(k1)?.isRead).toBe(true);
+      expect(threadMap.get(k2)?.isRead).toBe(true); // was already true
     });
 
     it("should remove from threadMap when removing a thread", () => {
       useThreadStore.getState().setThreads([mockThread, mockThread2]);
-      useThreadStore.getState().removeThread("thread-1");
+      useThreadStore.getState().removeThread(k1);
       const { threadMap } = useThreadStore.getState();
       expect(threadMap.size).toBe(1);
-      expect(threadMap.has("thread-1")).toBe(false);
-      expect(threadMap.has("thread-2")).toBe(true);
+      expect(threadMap.has(k1)).toBe(false);
+      expect(threadMap.has(k2)).toBe(true);
     });
 
     it("should remove from threadMap when removing multiple threads", () => {
       const mockThread3: Thread = { ...mockThread, id: "thread-3" };
       useThreadStore.getState().setThreads([mockThread, mockThread2, mockThread3]);
-      useThreadStore.getState().removeThreads(["thread-1", "thread-3"]);
+      useThreadStore.getState().removeThreads([k1, k3]);
       const { threadMap } = useThreadStore.getState();
       expect(threadMap.size).toBe(1);
-      expect(threadMap.has("thread-2")).toBe(true);
+      expect(threadMap.has(k2)).toBe(true);
     });
 
     it("should start with empty threadMap", () => {
@@ -171,9 +177,26 @@ describe("threadStore", () => {
     });
   });
 
+  it("keeps same-ID threads from different accounts apart", () => {
+    // The same message delivered to two accounts yields the same IMAP thread ID
+    const other: Thread = { ...mockThread, accountId: "acc-2" };
+    useThreadStore.getState().setThreads([mockThread, other]);
+    const otherKey = makeThreadKey("acc-2", "thread-1");
+
+    expect(useThreadStore.getState().threadMap.size).toBe(2);
+
+    useThreadStore.getState().updateThread(otherKey, { isRead: true });
+    expect(useThreadStore.getState().threadMap.get(otherKey)?.isRead).toBe(true);
+    expect(useThreadStore.getState().threadMap.get(k1)?.isRead).toBe(false);
+
+    useThreadStore.getState().removeThread(otherKey);
+    expect(useThreadStore.getState().threads).toHaveLength(1);
+    expect(useThreadStore.getState().threads[0]?.accountId).toBe("acc-1");
+  });
+
   it("should update a specific thread", () => {
     useThreadStore.getState().setThreads([mockThread, mockThread2]);
-    useThreadStore.getState().updateThread("thread-1", { isRead: true, isStarred: true });
+    useThreadStore.getState().updateThread(k1, { isRead: true, isStarred: true });
 
     const updated = useThreadStore.getState().threads.find((t) => t.id === "thread-1");
     expect(updated?.isRead).toBe(true);

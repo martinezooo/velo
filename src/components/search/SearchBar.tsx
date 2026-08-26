@@ -5,10 +5,12 @@ import { useThreadStore } from "@/stores/threadStore";
 import { useSmartFolderStore } from "@/stores/smartFolderStore";
 import { InputDialog } from "@/components/ui/InputDialog";
 import { Search, X, FolderPlus } from "lucide-react";
+import { makeThreadKey } from "@/utils/threadKey";
 
 export function SearchBar() {
   const searchQuery = useThreadStore((s) => s.searchQuery);
   const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const unifiedInbox = useAccountStore((s) => s.unifiedInbox);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,15 +35,19 @@ export function SearchBar() {
 
       debounceRef.current = setTimeout(async () => {
         try {
-          const hits = await searchMessages(value, activeAccountId ?? undefined, 100);
-          const threadIds = new Set(hits.map((h) => h.thread_id));
-          useThreadStore.getState().setSearch(value, threadIds);
+          // In "All inboxes" mode search every account, not just the active one
+          const scope = unifiedInbox ? undefined : activeAccountId ?? undefined;
+          const hits = await searchMessages(value, scope, 100);
+          const threadKeys = new Set(
+            hits.map((h) => makeThreadKey(h.account_id, h.thread_id)),
+          );
+          useThreadStore.getState().setSearch(value, threadKeys);
         } catch {
           useThreadStore.getState().setSearch(value, null);
         }
       }, 200);
     },
-    [activeAccountId],
+    [activeAccountId, unifiedInbox],
   );
 
   const handleClear = useCallback(() => {

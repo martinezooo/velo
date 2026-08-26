@@ -74,7 +74,7 @@ import { formatSyncError } from "./utils/networkErrors";
 import { getThemeById, COLOR_THEMES } from "./constants/themes";
 import type { ColorThemeId } from "./constants/themes";
 import { router } from "./router";
-import { getSelectedThreadId } from "./router/navigate";
+import { getSelectedThreadKey } from "./router/navigate";
 
 /**
  * Sync bridge: subscribes to router state changes and writes the selected
@@ -84,9 +84,11 @@ import { getSelectedThreadId } from "./router/navigate";
 function useRouterSyncBridge() {
   useEffect(() => {
     return router.subscribe("onResolved", () => {
-      const threadId = getSelectedThreadId();
-      if (useThreadStore.getState().selectedThreadId !== threadId) {
-        useThreadStore.getState().selectThread(threadId);
+      const threadKey = getSelectedThreadKey(
+        useAccountStore.getState().activeAccountId,
+      );
+      if (useThreadStore.getState().selectedThreadId !== threadKey) {
+        useThreadStore.getState().selectThread(threadKey);
       }
     });
   }, []);
@@ -106,7 +108,7 @@ export default function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showAskInbox, setShowAskInbox] = useState(false);
-  const [moveToFolderState, setMoveToFolderState] = useState<{ open: boolean; threadIds: string[] }>({ open: false, threadIds: [] });
+  const [moveToFolderState, setMoveToFolderState] = useState<{ open: boolean; threadKeys: string[] }>({ open: false, threadKeys: [] });
   const deepLinkCleanupRef = useRef<(() => void) | undefined>(undefined);
 
   // Sync bridge: router state → Zustand stores (temporary)
@@ -154,8 +156,8 @@ export default function App() {
     const toggleHelp = () => setShowShortcutsHelp((p) => !p);
     const toggleAskInbox = () => setShowAskInbox((p) => !p);
     const handleMoveToFolder = (e: Event) => {
-      const detail = (e as CustomEvent<{ threadIds: string[] }>).detail;
-      setMoveToFolderState({ open: true, threadIds: detail.threadIds });
+      const detail = (e as CustomEvent<{ threadKeys: string[] }>).detail;
+      setMoveToFolderState({ open: true, threadKeys: detail.threadKeys });
     };
     window.addEventListener("velo-toggle-command-palette", togglePalette);
     window.addEventListener("velo-toggle-shortcuts-help", toggleHelp);
@@ -305,7 +307,10 @@ export default function App() {
           provider: a.provider,
         }));
         const savedAccountId = await getSetting("active_account_id");
-        useAccountStore.getState().setAccounts(mapped, savedAccountId);
+        const savedUnified = await getSetting("unified_inbox");
+        useAccountStore
+          .getState()
+          .setAccounts(mapped, savedAccountId, savedUnified === "true");
 
         // Initialize Gmail clients for existing accounts
         await initializeClients();
@@ -605,8 +610,8 @@ export default function App() {
       <ContextMenuPortal />
       <MoveToFolderDialog
         isOpen={moveToFolderState.open}
-        threadIds={moveToFolderState.threadIds}
-        onClose={() => setMoveToFolderState({ open: false, threadIds: [] })}
+        threadKeys={moveToFolderState.threadKeys}
+        onClose={() => setMoveToFolderState({ open: false, threadKeys: [] })}
       />
     </div>
   );

@@ -21,12 +21,18 @@ const VALID_CATEGORIES = ["Primary", "Updates", "Promotions", "Social", "Newslet
 type MailSearch = {
   q?: string;
   category?: (typeof VALID_CATEGORIES)[number];
+  /** Account owning the selected thread — needed in "All inboxes" mode, where
+   *  the thread ID in the path is not unique on its own. */
+  acct?: string;
 };
 
 function validateMailSearch(search: Record<string, unknown>): MailSearch {
   const result: MailSearch = {};
   if (typeof search["q"] === "string" && search["q"]) {
     result.q = search["q"];
+  }
+  if (typeof search["acct"] === "string" && search["acct"]) {
+    result.acct = search["acct"];
   }
   const cat = search["category"];
   if (typeof cat === "string" && (VALID_CATEGORIES as readonly string[]).includes(cat)) {

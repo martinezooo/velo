@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { makeThreadKey } from "@/utils/threadKey";
 import {
   Mail, Clock, X, Send, Copy, Star, UserPlus, Check, PenLine,
   Paperclip, Building2, ChevronDown, ChevronRight,
@@ -48,8 +49,8 @@ export function ContactSidebar({ email, name, accountId, onClose }: ContactSideb
   const addedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleThreadClick = useCallback(async (threadId: string) => {
     const { threads, threadMap, setThreads } = useThreadStore.getState();
-    if (threadMap.has(threadId)) {
-      navigateToThread(threadId);
+    if (threadMap.has(makeThreadKey(accountId, threadId))) {
+      navigateToThread(threadId, accountId);
       return;
     }
     const dbThread = await getThreadById(accountId, threadId);
@@ -72,7 +73,7 @@ export function ContactSidebar({ email, name, accountId, onClose }: ContactSideb
       fromAddress: dbThread.from_address,
     };
     setThreads([...threads, mapped]);
-    navigateToThread(threadId);
+    navigateToThread(threadId, accountId);
   }, [accountId]);
 
   useEffect(() => {

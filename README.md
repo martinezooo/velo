@@ -47,6 +47,7 @@ Most email clients are slow, bloated, or send your data to someone else's server
 ### Email
 
 - Multi-account support: Gmail (API) and IMAP/SMTP (Outlook, Yahoo, iCloud, Fastmail, and more) with instant switching
+- **All inboxes**: one list with mail from every account, Gmail-mobile style — pick it in the account switcher. Every row shows its mailbox, and opening, archiving, or bulk-acting on a thread always uses that thread's own account
 - Threaded conversations with collapsible messages
 - Full-text search with Gmail-style operators (`from:`, `to:`, `subject:`, `has:attachment`, `label:`, etc.)
 - Command palette (`/` or `Ctrl+K`) for quick actions

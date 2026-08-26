@@ -9,7 +9,14 @@ vi.mock("@/services/db/connection", async (importOriginal) => {
 });
 
 import { getDb } from "@/services/db/connection";
-import { muteThread, unmuteThread, getMutedThreadIds, deleteAllThreadsForAccount } from "./threads";
+import {
+  muteThread,
+  unmuteThread,
+  getMutedThreadIds,
+  deleteAllThreadsForAccount,
+  getThreadsForAccounts,
+  getThreadsForCategoryAcrossAccounts,
+} from "./threads";
 import { createMockDb } from "@/test/mocks";
 
 const mockDb = createMockDb();
@@ -84,5 +91,65 @@ describe("threads service - mute", () => {
 
       expect(result.size).toBe(0);
     });
+  });
+});
+
+describe("threads service - multi-account queries", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getDb).mockResolvedValue(mockDb as unknown as Awaited<ReturnType<typeof getDb>>);
+    mockDb.select.mockResolvedValue([]);
+  });
+
+  it("expands one placeholder per account and appends limit/offset after them", async () => {
+    await getThreadsForAccounts(["acc-1", "acc-2"], undefined, 50, 0);
+
+    const [sql, params] = mockDb.select.mock.calls[0]!;
+    expect(sql).toContain("t.account_id IN ($1, $2)");
+    expect(sql).toContain("LIMIT $3 OFFSET $4");
+    expect(params).toEqual(["acc-1", "acc-2", 50, 0]);
+  });
+
+  it("places the label parameter after the account placeholders", async () => {
+    await getThreadsForAccounts(["acc-1", "acc-2", "acc-3"], "INBOX", 25, 25);
+
+    const [sql, params] = mockDb.select.mock.calls[0]!;
+    expect(sql).toContain("t.account_id IN ($1, $2, $3)");
+    expect(sql).toContain("tl.label_id = $4");
+    expect(sql).toContain("LIMIT $5 OFFSET $6");
+    expect(params).toEqual(["acc-1", "acc-2", "acc-3", "INBOX", 25, 25]);
+  });
+
+  it("orders by pinned then recency so accounts interleave by date", async () => {
+    await getThreadsForAccounts(["acc-1", "acc-2"]);
+
+    const [sql] = mockDb.select.mock.calls[0]!;
+    expect(sql).toContain("ORDER BY t.is_pinned DESC, t.last_message_at DESC");
+  });
+
+  it("returns empty without querying when no accounts are given", async () => {
+    expect(await getThreadsForAccounts([])).toEqual([]);
+    expect(await getThreadsForCategoryAcrossAccounts([], "Primary")).toEqual([]);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it("keeps category parameters after the account placeholders", async () => {
+    await getThreadsForCategoryAcrossAccounts(["acc-1", "acc-2"], "Promotions", 50, 0);
+
+    const [sql, params] = mockDb.select.mock.calls[0]!;
+    expect(sql).toContain("t.account_id IN ($1, $2)");
+    expect(sql).toContain("tc.category = $3");
+    expect(sql).toContain("LIMIT $4 OFFSET $5");
+    expect(params).toEqual(["acc-1", "acc-2", "Promotions", 50, 0]);
+  });
+
+  it("includes uncategorised threads in Primary across accounts", async () => {
+    await getThreadsForCategoryAcrossAccounts(["acc-1", "acc-2"], "Primary", 50, 0);
+
+    const [sql, params] = mockDb.select.mock.calls[0]!;
+    expect(sql).toContain("t.account_id IN ($1, $2)");
+    expect(sql).toContain("tc.category IS NULL OR tc.category = 'Primary'");
+    expect(sql).toContain("LIMIT $3 OFFSET $4");
+    expect(params).toEqual(["acc-1", "acc-2", 50, 0]);
   });
 });

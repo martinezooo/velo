@@ -152,6 +152,28 @@ describe("navigate", () => {
       expect(mockNavigate).toHaveBeenCalledWith({
         to: "/mail/$label/thread/$threadId",
         params: { label: "inbox", threadId: "thread-abc" },
+        search: {},
+      });
+    });
+
+    it("should carry the owning account in ?acct= when given", () => {
+      mockState.location.pathname = "/mail/inbox";
+      navigateToThread("thread-abc", "acc-2");
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: "/mail/$label/thread/$threadId",
+        params: { label: "inbox", threadId: "thread-abc" },
+        search: { acct: "acc-2" },
+      });
+    });
+
+    it("should drop a stale ?acct= when navigating without an account", () => {
+      mockState.location.pathname = "/mail/inbox";
+      mockState.location.search = { acct: "acc-old", category: "Updates" };
+      navigateToThread("thread-abc");
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: "/mail/$label/thread/$threadId",
+        params: { label: "inbox", threadId: "thread-abc" },
+        search: { category: "Updates" },
       });
     });
 

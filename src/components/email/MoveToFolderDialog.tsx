@@ -23,7 +23,8 @@ import {
 
 interface MoveToFolderDialogProps {
   isOpen: boolean;
-  threadIds: string[];
+  /** Composite account+thread keys — see utils/threadKey. */
+  threadKeys: string[];
   onClose: () => void;
 }
 
@@ -45,7 +46,7 @@ const SYSTEM_DESTINATIONS: Destination[] = [
 
 export function MoveToFolderDialog({
   isOpen,
-  threadIds,
+  threadKeys,
   onClose,
 }: MoveToFolderDialogProps) {
   const [query, setQuery] = useState("");
@@ -56,15 +57,36 @@ export function MoveToFolderDialog({
   const labels = useLabelStore((s) => s.labels);
   const activeAccountId = useAccountStore((s) => s.activeAccountId);
   const accounts = useAccountStore((s) => s.accounts);
+  const threadMap = useThreadStore((s) => s.threadMap);
 
-  const account = useMemo(
-    () => accounts.find((a) => a.id === activeAccountId),
-    [accounts, activeAccountId],
+  // Resolve the selection to real threads so each one moves within its own
+  // account — an "All inboxes" selection can span mailboxes.
+  const targets = useMemo(
+    () =>
+      threadKeys
+        .map((key) => threadMap.get(key))
+        .filter((t): t is NonNullable<typeof t> => t !== undefined),
+    [threadKeys, threadMap],
   );
-  const isImap = account?.provider === "imap";
+  const selectionAccountIds = useMemo(
+    () => new Set(targets.map((t) => t.accountId)),
+    [targets],
+  );
+  // The label list belongs to the active account, so user labels are only a
+  // valid destination when the whole selection lives in that account.
+  const labelsApply =
+    selectionAccountIds.size === 1 &&
+    activeAccountId !== null &&
+    selectionAccountIds.has(activeAccountId);
+
+  const accountById = useMemo(
+    () => new Map(accounts.map((a) => [a.id, a])),
+    [accounts],
+  );
 
   // Build the full destination list: system destinations + user labels
   const destinations = useMemo(() => {
+    if (!labelsApply) return SYSTEM_DESTINATIONS;
     const userLabels: Destination[] = labels.map((l) => ({
       id: l.id,
       label: l.name,
@@ -72,7 +94,7 @@ export function MoveToFolderDialog({
       type: "label" as const,
     }));
     return [...SYSTEM_DESTINATIONS, ...userLabels];
-  }, [labels]);
+  }, [labels, labelsApply]);
 
   // Filter destinations by search query
   const filtered = useMemo(() => {
@@ -83,36 +105,36 @@ export function MoveToFolderDialog({
 
   const handleSelect = useCallback(
     async (dest: Destination) => {
-      if (!activeAccountId || threadIds.length === 0) return;
+      if (targets.length === 0) return;
       onClose();
 
-      for (const threadId of threadIds) {
+      for (const target of targets) {
+        const accountId = target.accountId;
+        const threadId = target.id;
+        const isImap = accountById.get(accountId)?.provider === "imap";
         if (dest.id === "__archive__") {
-          await archiveThread(activeAccountId, threadId, []);
+          await archiveThread(accountId, threadId, []);
         } else if (dest.id === "TRASH") {
-          await trashThread(activeAccountId, threadId, []);
+          await trashThread(accountId, threadId, []);
         } else if (dest.id === "SPAM") {
-          await spamThread(activeAccountId, threadId, [], true);
+          await spamThread(accountId, threadId, [], true);
         } else if (dest.id === "INBOX") {
           if (isImap) {
-            await moveThread(activeAccountId, threadId, [], "INBOX");
+            await moveThread(accountId, threadId, [], "INBOX");
           } else {
             // Gmail: add INBOX label (un-archive)
-            await addThreadLabel(activeAccountId, threadId, "INBOX");
+            await addThreadLabel(accountId, threadId, "INBOX");
           }
         } else if (dest.type === "label") {
           if (isImap) {
             // IMAP: move to folder. The label's id is the folder path for IMAP accounts.
-            await moveThread(activeAccountId, threadId, [], dest.id);
+            await moveThread(accountId, threadId, [], dest.id);
           } else {
             // Gmail: add destination label + remove from current location (archive)
-            await addThreadLabel(activeAccountId, threadId, dest.id);
+            await addThreadLabel(accountId, threadId, dest.id);
             // Remove INBOX to complete the "move" semantics
-            const thread = useThreadStore
-              .getState()
-              .threads.find((t) => t.id === threadId);
-            if (thread?.labelIds.includes("INBOX")) {
-              await removeThreadLabel(activeAccountId, threadId, "INBOX");
+            if (target.labelIds.includes("INBOX")) {
+              await removeThreadLabel(accountId, threadId, "INBOX");
             }
           }
         }
@@ -121,7 +143,7 @@ export function MoveToFolderDialog({
       // Refresh thread list
       window.dispatchEvent(new Event("velo-sync-done"));
     },
-    [activeAccountId, threadIds, isImap, onClose],
+    [targets, accountById, onClose],
   );
 
   const handleKeyDown = useCallback(

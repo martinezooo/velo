@@ -1,12 +1,16 @@
 import { ThreadView } from "../email/ThreadView";
 import { useThreadStore } from "@/stores/threadStore";
-import { useSelectedThreadId } from "@/hooks/useRouteNavigation";
+import { useAccountStore } from "@/stores/accountStore";
+import { useSelectedThreadKey } from "@/hooks/useRouteNavigation";
 import { EmptyState } from "../ui/EmptyState";
 import { ReadingPaneIllustration } from "../ui/illustrations";
 
 export function ReadingPane() {
-  const selectedThreadId = useSelectedThreadId();
-  const selectedThread = useThreadStore((s) => selectedThreadId ? s.threadMap.get(selectedThreadId) ?? null : null);
+  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const selectedThreadKey = useSelectedThreadKey(activeAccountId);
+  const selectedThread = useThreadStore((s) =>
+    selectedThreadKey ? s.threadMap.get(selectedThreadKey) ?? null : null,
+  );
 
   if (!selectedThread) {
     return (

@@ -24,13 +24,21 @@ vi.mock("@/stores/accountStore", () => ({
   ),
 }));
 
+const mockThread = { id: "thread-1", accountId: "acc-1", labelIds: ["INBOX"] };
+// A second thread in another account, as an "All inboxes" selection can contain
+const otherAccountThread = { id: "thread-2", accountId: "acc-2", labelIds: ["INBOX"] };
+const mockThreadMap = new Map([
+  ["acc-1\u0001thread-1", mockThread],
+  ["acc-2\u0001thread-2", otherAccountThread],
+]);
+
 vi.mock("@/stores/threadStore", () => ({
   useThreadStore: Object.assign(
-    vi.fn(() => ({})),
+    vi.fn((selector: (s: unknown) => unknown) =>
+      selector({ threads: [mockThread], threadMap: mockThreadMap }),
+    ),
     {
-      getState: () => ({
-        threads: [{ id: "thread-1", labelIds: ["INBOX"] }],
-      }),
+      getState: () => ({ threads: [mockThread], threadMap: mockThreadMap }),
     },
   ),
 }));
@@ -60,7 +68,7 @@ import { archiveThread, trashThread, spamThread, addThreadLabel, removeThreadLab
 
 const defaultProps = {
   isOpen: true,
-  threadIds: ["thread-1"],
+  threadKeys: ["acc-1\u0001thread-1"],
   onClose: vi.fn(),
 };
 
@@ -178,8 +186,13 @@ describe("MoveToFolderDialog", () => {
     expect(archiveThread).toHaveBeenCalledWith("acc-1", "thread-1", []);
   });
 
-  it("handles multiple threadIds", async () => {
-    render(<MoveToFolderDialog {...defaultProps} threadIds={["thread-1", "thread-2"]} />);
+  it("archives a multi-account selection against each thread's own account", async () => {
+    render(
+      <MoveToFolderDialog
+        {...defaultProps}
+        threadKeys={["acc-1\u0001thread-1", "acc-2\u0001thread-2"]}
+      />,
+    );
 
     fireEvent.click(screen.getByText("Archive"));
 
@@ -187,7 +200,20 @@ describe("MoveToFolderDialog", () => {
       expect(archiveThread).toHaveBeenCalledTimes(2);
     });
     expect(archiveThread).toHaveBeenCalledWith("acc-1", "thread-1", []);
-    expect(archiveThread).toHaveBeenCalledWith("acc-1", "thread-2", []);
+    expect(archiveThread).toHaveBeenCalledWith("acc-2", "thread-2", []);
+  });
+
+  it("hides user labels when the selection spans accounts", () => {
+    render(
+      <MoveToFolderDialog
+        {...defaultProps}
+        threadKeys={["acc-1\u0001thread-1", "acc-2\u0001thread-2"]}
+      />,
+    );
+
+    // Labels belong to one account, so only system destinations are offered
+    expect(screen.getByText("Archive")).toBeInTheDocument();
+    expect(screen.queryByText("Work")).not.toBeInTheDocument();
   });
 
   it("closes when clicking the backdrop", () => {

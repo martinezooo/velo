@@ -11,6 +11,7 @@ import {
 import { useThreadStore } from "@/stores/threadStore";
 import { useAccountStore } from "@/stores/accountStore";
 import { addThreadLabel, removeThreadLabel } from "@/services/emailActions";
+import { parseThreadKey } from "@/utils/threadKey";
 
 // Map sidebar IDs to Gmail label IDs (same as EmailList)
 const LABEL_MAP: Record<string, string> = {
@@ -25,7 +26,8 @@ const LABEL_MAP: Record<string, string> = {
 };
 
 export interface DragData {
-  threadIds: string[];
+  /** Composite account+thread keys — see utils/threadKey. */
+  threadKeys: string[];
   sourceLabel: string;
 }
 
@@ -86,23 +88,28 @@ export function DndProvider({ children }: DndProviderProps) {
     const { over } = event;
     setDragData(null);
 
-    if (!over || !dragData || !activeAccountId) return;
+    if (!over || !dragData) return;
 
     const targetLabel = over.id as string;
     const change = resolveLabelChange(targetLabel, dragData.sourceLabel);
     if (!change) return;
 
     try {
-      for (const threadId of dragData.threadIds) {
+      for (const key of dragData.threadKeys) {
+        // Each dragged thread carries its own account — a selection made in
+        // "All inboxes" can span mailboxes.
+        const { accountId, threadId } = parseThreadKey(key);
+        const targetAccountId = accountId || activeAccountId;
+        if (!targetAccountId) continue;
         for (const labelId of change.addLabelIds) {
-          await addThreadLabel(activeAccountId, threadId, labelId);
+          await addThreadLabel(targetAccountId, threadId, labelId);
         }
         for (const labelId of change.removeLabelIds) {
-          await removeThreadLabel(activeAccountId, threadId, labelId);
+          await removeThreadLabel(targetAccountId, threadId, labelId);
         }
       }
       // Remove from current view
-      removeThreads(dragData.threadIds);
+      removeThreads(dragData.threadKeys);
     } catch (err) {
       console.error("Failed to move threads:", err);
     }
@@ -118,9 +125,9 @@ export function DndProvider({ children }: DndProviderProps) {
       <DragOverlay dropAnimation={null}>
         {dragData && (
           <div className="bg-accent text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg pointer-events-none">
-            {dragData.threadIds.length === 1
+            {dragData.threadKeys.length === 1
               ? "1 conversation"
-              : `${dragData.threadIds.length} conversations`}
+              : `${dragData.threadKeys.length} conversations`}
           </div>
         )}
       </DragOverlay>

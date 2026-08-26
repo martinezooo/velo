@@ -6,6 +6,7 @@ import {
   unpinThread as unpinThreadDb,
 } from "../db/threads";
 import { setThreadCategory } from "../db/threadCategories";
+import { makeThreadKey } from "@/utils/threadKey";
 import { snoozeThread } from "../snooze/snoozeManager";
 import { useThreadStore } from "@/stores/threadStore";
 
@@ -46,26 +47,27 @@ async function executeSingleAction(
     case "pin":
       await Promise.all(threadIds.map(async (id) => {
         await pinThreadDb(accountId, id);
-        useThreadStore.getState().updateThread(id, { isPinned: true });
+        useThreadStore.getState().updateThread(makeThreadKey(accountId, id), { isPinned: true });
       }));
       break;
 
     case "unpin":
       await Promise.all(threadIds.map(async (id) => {
         await unpinThreadDb(accountId, id);
-        useThreadStore.getState().updateThread(id, { isPinned: false });
+        useThreadStore.getState().updateThread(makeThreadKey(accountId, id), { isPinned: false });
       }));
       break;
 
     case "applyLabel":
       if (action.params?.labelId) {
         const labelId = action.params.labelId;
-        const threadMap = new Map(useThreadStore.getState().threads.map((t) => [t.id, t]));
+        const threadMap = useThreadStore.getState().threadMap;
         await Promise.all(threadIds.map(async (id) => {
           await addThreadLabel(accountId, id, labelId);
-          const thread = threadMap.get(id);
+          const key = makeThreadKey(accountId, id);
+          const thread = threadMap.get(key);
           if (thread && !thread.labelIds.includes(labelId)) {
-            useThreadStore.getState().updateThread(id, {
+            useThreadStore.getState().updateThread(key, {
               labelIds: [...thread.labelIds, labelId],
             });
           }
@@ -76,12 +78,13 @@ async function executeSingleAction(
     case "removeLabel":
       if (action.params?.labelId) {
         const labelId = action.params.labelId;
-        const threadMap = new Map(useThreadStore.getState().threads.map((t) => [t.id, t]));
+        const threadMap = useThreadStore.getState().threadMap;
         await Promise.all(threadIds.map(async (id) => {
           await removeThreadLabel(accountId, id, labelId);
-          const thread = threadMap.get(id);
+          const key = makeThreadKey(accountId, id);
+          const thread = threadMap.get(key);
           if (thread) {
-            useThreadStore.getState().updateThread(id, {
+            useThreadStore.getState().updateThread(key, {
               labelIds: thread.labelIds.filter((l) => l !== labelId),
             });
           }
@@ -181,7 +184,7 @@ export async function executeQuickStep(
       if (!quickStep.continueOnError) {
         // Fail-fast: still remove threads if a prior action flagged removal
         if (shouldRemoveThreads) {
-          useThreadStore.getState().removeThreads(threadIds);
+          useThreadStore.getState().removeThreads(threadIds.map((id) => makeThreadKey(accountId, id)));
         }
         return {
           success: false,
@@ -197,7 +200,7 @@ export async function executeQuickStep(
 
   // After all actions complete, batch-remove threads if any action flagged it
   if (shouldRemoveThreads) {
-    useThreadStore.getState().removeThreads(threadIds);
+    useThreadStore.getState().removeThreads(threadIds.map((id) => makeThreadKey(accountId, id)));
   }
 
   return {

@@ -1,4 +1,5 @@
 import { router } from "./index";
+import { makeThreadKey } from "@/utils/threadKey";
 
 /** Known system labels that map to /mail/$label */
 const SYSTEM_LABELS = new Set([
@@ -91,9 +92,16 @@ export function navigateToLabel(
  * Navigate to a thread within the current mail context.
  * Appends /thread/$threadId to the current route.
  */
-export function navigateToThread(threadId: string): void {
+export function navigateToThread(threadId: string, accountId?: string): void {
   const { location } = router.state;
   const pathname = location.pathname;
+
+  // Carry the owning account in `?acct=` so the thread stays resolvable when
+  // the list mixes accounts ("All inboxes"), where thread IDs can collide.
+  const current = location.search as Record<string, string>;
+  const search: Record<string, string> = { ...current };
+  if (accountId) search["acct"] = accountId;
+  else delete search["acct"];
 
   // Already on a mail/$label route
   const mailMatch = pathname.match(/^\/mail\/([^/]+)/);
@@ -101,7 +109,7 @@ export function navigateToThread(threadId: string): void {
     router.navigate({
       to: "/mail/$label/thread/$threadId",
       params: { label: mailMatch[1]!, threadId },
-      search: location.search as Record<string, string>,
+      search,
     });
     return;
   }
@@ -112,7 +120,7 @@ export function navigateToThread(threadId: string): void {
     router.navigate({
       to: "/label/$labelId/thread/$threadId",
       params: { labelId: labelMatch[1]!, threadId },
-      search: location.search as Record<string, string>,
+      search,
     });
     return;
   }
@@ -123,7 +131,7 @@ export function navigateToThread(threadId: string): void {
     router.navigate({
       to: "/smart-folder/$folderId/thread/$threadId",
       params: { folderId: sfMatch[1]!, threadId },
-      search: location.search as Record<string, string>,
+      search,
     });
     return;
   }
@@ -132,6 +140,7 @@ export function navigateToThread(threadId: string): void {
   router.navigate({
     to: "/mail/$label/thread/$threadId",
     params: { label: "inbox", threadId },
+    search,
   });
 }
 
@@ -237,4 +246,27 @@ export function getSelectedThreadId(): string | null {
     }
   }
   return null;
+}
+
+/** Account that owns the selected thread, from `?acct=` (null when absent). */
+export function getSelectedThreadAccountId(): string | null {
+  const matches = router.state.matches;
+  for (const match of matches) {
+    const search = (match as { search?: Record<string, unknown> }).search;
+    if (search && typeof search["acct"] === "string" && search["acct"]) {
+      return search["acct"];
+    }
+  }
+  return null;
+}
+
+/**
+ * Composite key of the selected thread, or null when nothing is selected.
+ * Falls back to the given account when the route carries no `?acct=`.
+ */
+export function getSelectedThreadKey(fallbackAccountId?: string | null): string | null {
+  const threadId = getSelectedThreadId();
+  if (!threadId) return null;
+  const accountId = getSelectedThreadAccountId() ?? fallbackAccountId ?? "";
+  return makeThreadKey(accountId, threadId);
 }

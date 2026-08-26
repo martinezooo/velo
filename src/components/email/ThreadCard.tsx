@@ -1,6 +1,8 @@
 import { memo, useMemo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { Thread } from "@/stores/threadStore";
+import type { Account } from "@/stores/accountStore";
+import { threadKeyOf } from "@/utils/threadKey";
 import { useThreadStore } from "@/stores/threadStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useActiveLabel } from "@/hooks/useRouteNavigation";
@@ -15,18 +17,39 @@ const CATEGORY_COLORS: Record<string, string> = {
   Newsletters: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
 };
 
+/** Stable per-account accent so the same mailbox always reads the same colour. */
+const ACCOUNT_COLORS = [
+  "bg-sky-500",
+  "bg-emerald-500",
+  "bg-violet-500",
+  "bg-amber-500",
+  "bg-rose-500",
+  "bg-teal-500",
+] as const;
+
+function accountColor(accountId: string): string {
+  let hash = 0;
+  for (let i = 0; i < accountId.length; i++) {
+    hash = (hash * 31 + accountId.charCodeAt(i)) >>> 0;
+  }
+  return ACCOUNT_COLORS[hash % ACCOUNT_COLORS.length]!;
+}
+
 interface ThreadCardProps {
   thread: Thread;
   isSelected: boolean;
   onClick: (thread: Thread) => void;
-  onContextMenu?: (e: React.MouseEvent, threadId: string) => void;
+  onContextMenu?: (e: React.MouseEvent, threadKey: string) => void;
   category?: string;
   showCategoryBadge?: boolean;
   hasFollowUp?: boolean;
+  /** Set only in "All inboxes" mode — shows which mailbox the thread is in. */
+  account?: Account | undefined;
 }
 
-export const ThreadCard = memo(function ThreadCard({ thread, isSelected, onClick, onContextMenu, category, showCategoryBadge, hasFollowUp }: ThreadCardProps) {
-  const isMultiSelected = useThreadStore((s) => s.selectedThreadIds.has(thread.id));
+export const ThreadCard = memo(function ThreadCard({ thread, isSelected, onClick, onContextMenu, category, showCategoryBadge, hasFollowUp, account }: ThreadCardProps) {
+  const threadKey = threadKeyOf(thread);
+  const isMultiSelected = useThreadStore((s) => s.selectedThreadIds.has(threadKey));
   const hasMultiSelect = useThreadStore((s) => s.selectedThreadIds.size > 0);
   const toggleThreadSelection = useThreadStore((s) => s.toggleThreadSelection);
   const selectThreadRange = useThreadStore((s) => s.selectThreadRange);
@@ -36,33 +59,33 @@ export const ThreadCard = memo(function ThreadCard({ thread, isSelected, onClick
 
   // Read selectedThreadIds lazily for drag — avoids subscribing all cards to the Set reference
   const dragData: DragData = useMemo(() => ({
-    threadIds: hasMultiSelect && isMultiSelected
+    threadKeys: hasMultiSelect && isMultiSelected
       ? [...useThreadStore.getState().selectedThreadIds]
-      : [thread.id],
+      : [threadKey],
     sourceLabel: activeLabel,
-  }), [hasMultiSelect, isMultiSelected, thread.id, activeLabel]);
+  }), [hasMultiSelect, isMultiSelected, threadKey, activeLabel]);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `thread-${thread.id}`,
+    id: `thread-${threadKey}`,
     data: dragData,
   });
 
   const handleClick = (e: React.MouseEvent) => {
     if (e.shiftKey) {
       e.preventDefault();
-      selectThreadRange(thread.id);
+      selectThreadRange(threadKey);
     } else if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      toggleThreadSelection(thread.id);
+      toggleThreadSelection(threadKey);
     } else if (hasMultiSelect) {
-      toggleThreadSelection(thread.id);
+      toggleThreadSelection(threadKey);
     } else {
       onClick(thread);
     }
   };
 
   const handleContextMenu = onContextMenu
-    ? (e: React.MouseEvent) => onContextMenu(e, thread.id)
+    ? (e: React.MouseEvent) => onContextMenu(e, threadKey)
     : undefined;
   const initial = (
     thread.fromName?.[0] ??
@@ -116,6 +139,15 @@ export const ThreadCard = memo(function ThreadCard({ thread, isSelected, onClick
             >
               {thread.fromName ?? thread.fromAddress ?? "Unknown"}
             </span>
+            {account && (
+              <span
+                className="flex items-center gap-1 text-[0.625rem] text-text-tertiary max-w-[9rem] shrink-0"
+                title={account.email}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${accountColor(account.id)}`} />
+                <span className="truncate">{account.email}</span>
+              </span>
+            )}
             <span className="text-xs text-text-tertiary whitespace-nowrap shrink-0">
               {formatRelativeDate(thread.lastMessageAt)}
             </span>

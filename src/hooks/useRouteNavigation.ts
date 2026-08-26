@@ -1,4 +1,5 @@
 import { useMatches } from "@tanstack/react-router";
+import { makeThreadKey } from "@/utils/threadKey";
 
 /**
  * Safely call useMatches — returns [] when no router context is available
@@ -53,6 +54,33 @@ export function useSelectedThreadId(): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Account that owns the selected thread, taken from `?acct=`.
+ * Absent on routes written before "All inboxes" existed, and on single-account
+ * navigation — callers fall back to the active account.
+ */
+export function useSelectedThreadAccountId(): string | null {
+  const matches = useMatchesSafe();
+  for (const match of matches) {
+    const search = (match as { search?: Record<string, unknown> }).search;
+    if (search && typeof search["acct"] === "string" && search["acct"]) {
+      return search["acct"];
+    }
+  }
+  return null;
+}
+
+/**
+ * Composite key (account + thread) of the selected thread — what the thread
+ * store is keyed by. Null when no thread is selected.
+ */
+export function useSelectedThreadKey(fallbackAccountId?: string | null): string | null {
+  const threadId = useSelectedThreadId();
+  const acct = useSelectedThreadAccountId();
+  if (!threadId) return null;
+  return makeThreadKey(acct ?? fallbackAccountId ?? "", threadId);
 }
 
 /**

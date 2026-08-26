@@ -7,7 +7,7 @@ import { useAccountStore } from "@/stores/accountStore";
 import { getGmailClient } from "@/services/gmail/tokenManager";
 import { getTemplatesForAccount, type DbTemplate } from "@/services/db/templates";
 import { useActiveLabel } from "@/hooks/useRouteNavigation";
-import { navigateToLabel, navigateBack, getSelectedThreadId } from "@/router/navigate";
+import { navigateToLabel, navigateBack, getSelectedThreadId, getSelectedThreadKey } from "@/router/navigate";
 
 interface Command {
   id: string;
@@ -54,17 +54,23 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     { id: "deselect", label: "Close Thread", shortcut: "Esc", category: "Actions", action: () => { navigateBack(); onClose(); } },
     { id: "spam", label: activeLabel === "spam" ? "Not Spam" : "Report Spam", shortcut: "!", category: "Actions", action: async () => {
       onClose();
-      const selectedId = getSelectedThreadId();
-      const accountId = useAccountStore.getState().activeAccountId;
-      if (!selectedId || !accountId) return;
+      const selectedKey = getSelectedThreadKey(
+        useAccountStore.getState().activeAccountId,
+      );
+      const selected = selectedKey
+        ? useThreadStore.getState().threadMap.get(selectedKey)
+        : undefined;
+      if (!selectedKey || !selected) return;
       try {
-        const client = await getGmailClient(accountId);
+        // Use the thread's own account — in "All inboxes" it may differ from
+        // the account selected in the sidebar.
+        const client = await getGmailClient(selected.accountId);
         if (activeLabel === "spam") {
-          await client.modifyThread(selectedId, ["INBOX"], ["SPAM"]);
+          await client.modifyThread(selected.id, ["INBOX"], ["SPAM"]);
         } else {
-          await client.modifyThread(selectedId, ["SPAM"], ["INBOX"]);
+          await client.modifyThread(selected.id, ["SPAM"], ["INBOX"]);
         }
-        useThreadStore.getState().removeThread(selectedId);
+        useThreadStore.getState().removeThread(selectedKey);
       } catch (err) {
         console.error("Spam action failed:", err);
       }

@@ -10,6 +10,7 @@ vi.mock("@/stores/threadStore", () => ({
   useThreadStore: {
     getState: () => ({
       threads: [],
+      threadMap: new Map(),
       selectedThreadIds: new Set(),
       removeThread: vi.fn(),
       removeThreads: vi.fn(),
@@ -47,6 +48,7 @@ vi.mock("@/router/navigate", () => ({
   navigateBack: vi.fn(),
   getActiveLabel: () => "inbox",
   getSelectedThreadId: () => null,
+  getSelectedThreadKey: () => null,
 }));
 vi.mock("@/services/emailActions", () => ({
   archiveThread: vi.fn(),
