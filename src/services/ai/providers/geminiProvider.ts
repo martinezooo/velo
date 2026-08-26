@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { AiProviderClient, AiCompletionRequest } from "../types";
+import { describeProviderError } from "../errors";
+import type { AiProviderClient, AiCompletionRequest, AiConnectionTest } from "../types";
 import { createProviderFactory } from "../providerFactory";
 
 const factory = createProviderFactory(
@@ -20,15 +21,15 @@ export function createGeminiProvider(apiKey: string, modelId: string): AiProvide
       return result.response.text();
     },
 
-    async testConnection(): Promise<boolean> {
+    async testConnection(): Promise<AiConnectionTest> {
       try {
         const model = client.getGenerativeModel({
           model: modelId,
         });
         await model.generateContent("Say hi");
-        return true;
-      } catch {
-        return false;
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: describeProviderError(err) };
       }
     },
   };

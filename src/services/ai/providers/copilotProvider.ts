@@ -1,5 +1,6 @@
 import OpenAI from "openai";
-import type { AiProviderClient, AiCompletionRequest } from "../types";
+import { describeProviderError } from "../errors";
+import type { AiProviderClient, AiCompletionRequest, AiConnectionTest } from "../types";
 import { createProviderFactory } from "../providerFactory";
 
 const factory = createProviderFactory(
@@ -29,16 +30,16 @@ export function createCopilotProvider(apiKey: string, model: string): AiProvider
       return response.choices[0]?.message?.content ?? "";
     },
 
-    async testConnection(): Promise<boolean> {
+    async testConnection(): Promise<AiConnectionTest> {
       try {
         await client.chat.completions.create({
           model,
           max_tokens: 10,
           messages: [{ role: "user", content: "Say hi" }],
         });
-        return true;
-      } catch {
-        return false;
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: describeProviderError(err) };
       }
     },
   };

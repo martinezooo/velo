@@ -89,14 +89,14 @@ describe("ollamaProvider", () => {
       });
 
       const provider = createOllamaProvider("http://localhost:11434", "llama3.2");
-      expect(await provider.testConnection()).toBe(true);
+      expect(await provider.testConnection()).toEqual({ ok: true });
     });
 
     it("returns false when completion throws", async () => {
       mockCreate.mockRejectedValue(new Error("Connection refused"));
 
       const provider = createOllamaProvider("http://localhost:11434", "llama3.2");
-      expect(await provider.testConnection()).toBe(false);
+      expect((await provider.testConnection()).ok).toBe(false);
     });
   });
 

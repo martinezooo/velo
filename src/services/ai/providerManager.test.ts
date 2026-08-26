@@ -119,7 +119,7 @@ describe("providerManager", () => {
       });
 
       await getActiveProvider();
-      expect(createGeminiProvider).toHaveBeenCalledWith("AItest", "gemini-2.5-flash-preview-05-20");
+      expect(createGeminiProvider).toHaveBeenCalledWith("AItest", "gemini-2.5-flash");
     });
 
     it("uses custom model from settings when configured", async () => {

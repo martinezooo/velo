@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { describeProviderError } from "@/services/ai/errors";
 
 /**
  * Visible state for AI work.
@@ -77,25 +78,18 @@ export async function runAiTask<T>(label: string, task: () => Promise<T>): Promi
   }
 }
 
-/** Turn a provider error into something worth showing a reader. */
+/**
+ * Turn a provider error into something worth showing a reader. Shares the
+ * provider-error vocabulary with the Settings connection test, so the same
+ * failure is described the same way wherever it surfaces.
+ */
 export function describeAiError(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err ?? "Unknown error");
   const lower = raw.toLowerCase();
 
-  if (lower.includes("timed out") || lower.includes("timeout") || lower.includes("aborted")) {
-    return "The model did not respond in time";
-  }
-  if (lower.includes("401") || lower.includes("unauthorized") || lower.includes("api key")) {
-    return "API key rejected — check it in Settings > AI";
-  }
-  if (lower.includes("429") || lower.includes("rate limit") || lower.includes("quota")) {
-    return "Rate limit or quota reached — try again shortly";
-  }
-  if (lower.includes("failed to fetch") || lower.includes("network") || lower.includes("enotfound")) {
-    return "Could not reach the AI provider — check your connection";
-  }
   if (lower.includes("no provider") || lower.includes("not configured")) {
     return "No AI provider configured — add a key in Settings > AI";
   }
-  return raw.length > 120 ? raw.slice(0, 120) + "…" : raw;
+  const described = describeProviderError(err);
+  return described.length > 120 ? described.slice(0, 120) + "…" : described;
 }

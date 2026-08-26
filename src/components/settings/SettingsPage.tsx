@@ -133,6 +133,7 @@ export function SettingsPage() {
   const [aiKeySaved, setAiKeySaved] = useState(false);
   const [aiTesting, setAiTesting] = useState(false);
   const [aiTestResult, setAiTestResult] = useState<"success" | "fail" | null>(null);
+  const [aiTestError, setAiTestError] = useState<string | null>(null);
   const [aiAutoDraftEnabled, setAiAutoDraftEnabled] = useState(true);
   const [aiWritingStyleEnabled, setAiWritingStyleEnabled] = useState(true);
   const [styleAnalyzing, setStyleAnalyzing] = useState(false);
@@ -1157,12 +1158,15 @@ export function SettingsPage() {
                             onClick={async () => {
                               setAiTesting(true);
                               setAiTestResult(null);
+                              setAiTestError(null);
                               try {
                                 const { testConnection } = await import("@/services/ai/aiService");
-                                const ok = await testConnection();
-                                setAiTestResult(ok ? "success" : "fail");
-                              } catch {
+                                const result = await testConnection();
+                                setAiTestResult(result.ok ? "success" : "fail");
+                                setAiTestError(result.error ?? null);
+                              } catch (err) {
                                 setAiTestResult("fail");
+                                setAiTestError(err instanceof Error ? err.message : String(err));
                               } finally {
                                 setAiTesting(false);
                               }
@@ -1176,7 +1180,9 @@ export function SettingsPage() {
                             <span className="text-xs text-success">Connected!</span>
                           )}
                           {aiTestResult === "fail" && (
-                            <span className="text-xs text-danger">Connection failed</span>
+                            <span className="text-xs text-danger">
+                              {aiTestError ?? "Connection failed"}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1282,12 +1288,15 @@ export function SettingsPage() {
                             onClick={async () => {
                               setAiTesting(true);
                               setAiTestResult(null);
+                              setAiTestError(null);
                               try {
                                 const { testConnection } = await import("@/services/ai/aiService");
-                                const ok = await testConnection();
-                                setAiTestResult(ok ? "success" : "fail");
-                              } catch {
+                                const result = await testConnection();
+                                setAiTestResult(result.ok ? "success" : "fail");
+                                setAiTestError(result.error ?? null);
+                              } catch (err) {
                                 setAiTestResult("fail");
+                                setAiTestError(err instanceof Error ? err.message : String(err));
                               } finally {
                                 setAiTesting(false);
                               }
@@ -1306,7 +1315,9 @@ export function SettingsPage() {
                             <span className="text-xs text-success">Connected!</span>
                           )}
                           {aiTestResult === "fail" && (
-                            <span className="text-xs text-danger">Connection failed</span>
+                            <span className="text-xs text-danger">
+                              {aiTestError ?? "Connection failed"}
+                            </span>
                           )}
                         </div>
                       </div>

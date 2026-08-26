@@ -1,6 +1,7 @@
 import OpenAI from "openai";
+import { describeProviderError } from "../errors";
 import { fetch } from "@tauri-apps/plugin-http";
-import type { AiProviderClient, AiCompletionRequest } from "../types";
+import type { AiProviderClient, AiCompletionRequest, AiConnectionTest } from "../types";
 
 let instance: OpenAI | null = null;
 let cachedKey: string | null = null;
@@ -36,16 +37,16 @@ export function createOllamaProvider(serverUrl: string, model: string): AiProvid
       return response.choices[0]?.message?.content ?? "";
     },
 
-    async testConnection(): Promise<boolean> {
+    async testConnection(): Promise<AiConnectionTest> {
       try {
         await client.chat.completions.create({
           model,
           max_tokens: 10,
           messages: [{ role: "user", content: "Say hi" }],
         });
-        return true;
-      } catch {
-        return false;
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: describeProviderError(err) };
       }
     },
   };

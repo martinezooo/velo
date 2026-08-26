@@ -1,4 +1,4 @@
-import { getSetting, getSecureSetting } from "@/services/db/settings";
+import { getSetting, setSetting, getSecureSetting } from "@/services/db/settings";
 import { AiError } from "./errors";
 import type { AiProvider, AiProviderClient } from "./types";
 import { DEFAULT_MODELS, MODEL_SETTINGS } from "./types";
@@ -16,6 +16,51 @@ const API_KEY_SETTINGS: Record<Exclude<AiProvider, "ollama">, string> = {
 };
 
 let cachedProvider: { name: AiProvider; key: string; client: AiProviderClient } | null = null;
+
+/**
+ * Model IDs that were shipped as defaults but have since been withdrawn by the
+ * provider. A request for one 404s, which used to surface as a bare connection
+ * error, so a stored value is replaced rather than passed through.
+ */
+const RETIRED_MODELS: Record<string, string> = {
+  "gemini-2.5-flash-preview-05-20": "gemini-2.5-flash",
+  "gemini-2.5-pro-preview-05-06": "gemini-2.5-pro",
+};
+
+/**
+ * Rewrite any stored model ID the provider has withdrawn. Runs at startup so
+ * Settings shows the model actually in use, rather than a value that only gets
+ * corrected the first time an AI call happens to run.
+ */
+export async function migrateRetiredModels(): Promise<void> {
+  for (const [provider, setting] of Object.entries(MODEL_SETTINGS)) {
+    try {
+      const stored = await getSetting(setting);
+      if (!stored) continue;
+      const replacement = RETIRED_MODELS[stored];
+      if (replacement) {
+        await setSetting(setting, replacement);
+        console.info(`[ai] ${provider}: model ${stored} was withdrawn, using ${replacement}`);
+      }
+    } catch {
+      // A single unreadable setting must not block startup
+    }
+  }
+}
+
+function resolveModel(
+  providerName: keyof typeof MODEL_SETTINGS,
+  stored: string | null,
+): string {
+  if (!stored) return DEFAULT_MODELS[providerName];
+  const replacement = RETIRED_MODELS[stored];
+  if (replacement) {
+    // Persist so Settings shows the model actually in use
+    setSetting(MODEL_SETTINGS[providerName], replacement).catch(() => {});
+    return replacement;
+  }
+  return stored;
+}
 
 export async function getActiveProviderName(): Promise<AiProvider> {
   const setting = await getSetting("ai_provider");
@@ -47,7 +92,10 @@ export async function getActiveProvider(): Promise<AiProviderClient> {
     throw new AiError("NOT_CONFIGURED", `${providerName} API key not configured`);
   }
 
-  const model = (await getSetting(MODEL_SETTINGS[providerName])) ?? DEFAULT_MODELS[providerName];
+  const model = resolveModel(
+    providerName,
+    await getSetting(MODEL_SETTINGS[providerName]),
+  );
   const cacheKey = `${apiKey}|${model}`;
 
   if (cachedProvider && cachedProvider.name === providerName && cachedProvider.key === cacheKey) {

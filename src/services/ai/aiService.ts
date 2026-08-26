@@ -1,6 +1,7 @@
 import { getActiveProvider } from "./providerManager";
 import { getAiCache, setAiCache } from "@/services/db/aiCache";
-import { AiError } from "./errors";
+import { AiError, describeProviderError } from "./errors";
+import type { AiConnectionTest } from "./types";
 import type { DbMessage } from "@/services/db/messages";
 import {
   SUMMARIZE_PROMPT,
@@ -235,11 +236,13 @@ export async function extractTaskFromThread(
   return callAi(EXTRACT_TASK_PROMPT, combined);
 }
 
-export async function testConnection(): Promise<boolean> {
+export async function testConnection(): Promise<AiConnectionTest> {
   try {
     const provider = await getActiveProvider();
     return await provider.testConnection();
-  } catch {
-    return false;
+  } catch (err) {
+    // Reaching here means the provider could not even be constructed —
+    // usually a missing key or an unconfigured provider.
+    return { ok: false, error: describeProviderError(err) };
   }
 }

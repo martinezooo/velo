@@ -1,3 +1,8 @@
+export interface AiConnectionTest {
+  ok: boolean;
+  error?: string;
+}
+
 export type AiProvider = "claude" | "openai" | "gemini" | "ollama" | "copilot";
 
 export interface AiCompletionRequest {
@@ -8,13 +13,18 @@ export interface AiCompletionRequest {
 
 export interface AiProviderClient {
   complete(req: AiCompletionRequest): Promise<string>;
-  testConnection(): Promise<boolean>;
+  /**
+   * Verify the key and model actually work. Returns the provider's own reason
+   * on failure — a bare boolean cannot distinguish a bad key from a withdrawn
+   * model, and both used to surface as "connection error".
+   */
+  testConnection(): Promise<AiConnectionTest>;
 }
 
 export const DEFAULT_MODELS: Record<AiProvider, string> = {
   claude: "claude-haiku-4-5-20251001",
   openai: "gpt-4o-mini",
-  gemini: "gemini-2.5-flash-preview-05-20",
+  gemini: "gemini-2.5-flash",
   ollama: "llama3.2",
   copilot: "openai/gpt-4o-mini",
 };
@@ -37,9 +47,13 @@ export const PROVIDER_MODELS: Record<Exclude<AiProvider, "ollama">, ModelOption[
     { id: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
     { id: "gpt-4.1", label: "GPT-4.1" },
   ],
+  // Dated preview aliases are withdrawn once the model goes stable, and a
+  // request for a withdrawn ID 404s. Only stable IDs belong here.
   gemini: [
-    { id: "gemini-2.5-flash-preview-05-20", label: "Gemini 2.5 Flash" },
-    { id: "gemini-2.5-pro-preview-05-06", label: "Gemini 2.5 Pro" },
+    { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+    { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
+    { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+    { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
   ],
   copilot: [
     { id: "openai/gpt-4o-mini", label: "GPT-4o Mini (Low)" },

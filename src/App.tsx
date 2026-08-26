@@ -270,6 +270,11 @@ export default function App() {
           useUIStore.setState({ lastSyncAt: parsedLastSync });
         }
 
+        // Replace AI model IDs the provider has withdrawn
+        import("./services/ai/providerManager")
+          .then(({ migrateRetiredModels }) => migrateRetiredModels())
+          .catch(() => {});
+
         // Restore sender avatars
         const savedAvatars = await getSetting("show_sender_avatars");
         if (savedAvatars === "false") {

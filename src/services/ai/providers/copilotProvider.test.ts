@@ -91,14 +91,14 @@ describe("copilotProvider", () => {
       });
 
       const provider = createCopilotProvider("ghp_test123", "openai/gpt-4o-mini");
-      expect(await provider.testConnection()).toBe(true);
+      expect(await provider.testConnection()).toEqual({ ok: true });
     });
 
     it("returns false when completion throws", async () => {
       mockCreate.mockRejectedValue(new Error("Unauthorized"));
 
       const provider = createCopilotProvider("ghp_test123", "openai/gpt-4o-mini");
-      expect(await provider.testConnection()).toBe(false);
+      expect((await provider.testConnection()).ok).toBe(false);
     });
   });
 
