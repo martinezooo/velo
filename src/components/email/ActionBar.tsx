@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Thread } from "@/stores/threadStore";
 import { useThreadStore } from "@/stores/threadStore";
+import { useUIStore } from "@/stores/uiStore";
 import { threadKeyOf } from "@/utils/threadKey";
 import { useActiveLabel } from "@/hooks/useRouteNavigation";
 import { archiveThread, trashThread, permanentDeleteThread, markThreadRead, starThread, spamThread } from "@/services/emailActions";
@@ -10,7 +11,7 @@ import { snoozeThread } from "@/services/snooze/snoozeManager";
 import { getGmailClient } from "@/services/gmail/tokenManager";
 import { SnoozeDialog } from "./SnoozeDialog";
 import { FollowUpDialog } from "./FollowUpDialog";
-import { Archive, Trash2, MailOpen, Mail, Star, Clock, Ban, Pin, MailMinus, BellRing, VolumeX, Reply, ReplyAll, Forward, FolderInput, Printer, Download, ExternalLink, PanelRightClose, PanelRightOpen, ListTodo } from "lucide-react";
+import { Archive, Trash2, MailOpen, Mail, Star, Clock, Ban, Pin, MailMinus, BellRing, VolumeX, Reply, ReplyAll, Forward, FolderInput, Printer, Download, ExternalLink, PanelRightClose, PanelRightOpen, ListTodo, Sun, Moon } from "lucide-react";
 import type { DbMessage } from "@/services/db/messages";
 import { insertFollowUpReminder, getFollowUpForThread, cancelFollowUpForThread } from "@/services/db/followUpReminders";
 import { Button } from "@/components/ui/Button";
@@ -44,6 +45,8 @@ export function ActionBar({ thread, messages, noReply, defaultReplyMode = "reply
   const accountId = thread.accountId;
   const threadKey = threadKeyOf(thread);
   const activeLabel = useActiveLabel();
+  const emailBodyTheme = useUIStore((s) => s.emailBodyTheme);
+  const toggleEmailBodyTheme = useUIStore((s) => s.toggleEmailBodyTheme);
   const [showSnooze, setShowSnooze] = useState(false);
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [hasFollowUp, setHasFollowUp] = useState(false);
@@ -324,6 +327,17 @@ export function ActionBar({ thread, messages, noReply, defaultReplyMode = "reply
         <div className="ml-auto" />
 
         {/* Utility group */}
+        <Button
+          variant="secondary"
+          iconOnly
+          icon={emailBodyTheme === "dark" ? <Moon size={15} className="text-accent" /> : <Sun size={15} />}
+          onClick={toggleEmailBodyTheme}
+          title={
+            emailBodyTheme === "dark"
+              ? "Message body: dark — switch to light"
+              : "Message body: light — switch to dark"
+          }
+        />
         <Button variant="secondary" iconOnly icon={<Printer size={15} />} onClick={onPrint} title="Print" />
         <Button variant="secondary" iconOnly icon={<Download size={15} />} onClick={onExport} title="Export as .eml" />
         <Button variant="secondary" iconOnly icon={<ExternalLink size={15} />} onClick={onPopOut} title="Open in new window" />

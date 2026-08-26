@@ -2,6 +2,9 @@ import type { LucideIcon } from "lucide-react";
 import {
   Mail,
   Layers,
+  SunMoon,
+  HardDrive,
+  Activity,
   PenLine,
   Search,
   Tag,
@@ -207,6 +210,19 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     label: "Reading Email",
     icon: Eye,
     cards: [
+      {
+        id: "message-body-theme",
+        icon: SunMoon,
+        title: "Light or dark message bodies",
+        summary: "Stop HTML email flashing white in a dark app.",
+        description:
+          "HTML email is authored against white backgrounds, so by default Revelo renders it light even when the rest of the app is dark. The sun/moon button in the message toolbar switches the body to dark, inverting the message and re-inverting photos and logos so they still look right. The choice is remembered and applies to every message you open. Plain-text mail always follows the app theme.",
+        tips: [
+          { text: "The toggle sits in the message toolbar, next to Print." },
+          { text: "Photos and logos keep their real colours in dark mode." },
+          { text: "Some heavily styled newsletters still read better in light mode." },
+        ],
+      },
       {
         id: "thread-view",
         icon: Mail,
@@ -760,6 +776,20 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     icon: Sparkles,
     cards: [
       {
+        id: "ai-activity",
+        icon: Activity,
+        title: "AI activity and errors",
+        summary: "See whether the model is working or has failed.",
+        description:
+          "Whenever Revelo asks a model for something, a small indicator appears in the bottom-right corner: pulsing while the request is in flight, and turning into a red card with the reason if it fails — a rejected API key, a rate limit, or an unreachable provider. Thread summaries show the same state inline, with a Try again link. Nothing retries silently in the background.",
+        tips: [
+          { text: "A failed summary shows the reason instead of an empty card." },
+          { text: "Dismiss an error card with the X; the next attempt clears it too." },
+          { text: "Most failures point at Settings > AI." },
+        ],
+        relatedSettingsTab: "ai",
+      },
+      {
         id: "ai-overview",
         icon: Brain,
         title: "AI overview",
@@ -1193,6 +1223,20 @@ export const HELP_CATEGORIES: HelpCategory[] = [
           { text: "Each account has independent inbox, labels, and sync." },
           { text: "Add or remove accounts in Settings > Accounts." },
           { text: "Re-authorize a Gmail account if the token expires." },
+        ],
+        relatedSettingsTab: "accounts",
+      },
+      {
+        id: "mailbox-usage",
+        icon: HardDrive,
+        title: "Mailbox usage",
+        summary: "How much mail each account holds.",
+        description:
+          "Turn on \u201CShow mailbox usage\u201D in Settings > Accounts to see the size, message count and conversation count for every account, plus how much space cached attachments take on this machine. The figures are measured from what has actually been synced to your computer, not from the provider\u2019s own storage quota.",
+        tips: [
+          { text: "Enable it in Settings > Accounts." },
+          { text: "Size reflects synced mail, so it grows as history is fetched." },
+          { text: "Attachment cache size can be capped separately in Settings." },
         ],
         relatedSettingsTab: "accounts",
       },

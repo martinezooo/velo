@@ -2,6 +2,7 @@ import { refreshAccessToken, type TokenResponse } from "./auth";
 import { getDb } from "../db/connection";
 import { encryptValue } from "@/utils/crypto";
 import { getCurrentUnixTimestamp } from "@/utils/timestamp";
+import { fetchWithTimeout } from "@/utils/fetchWithTimeout";
 
 const GMAIL_API_BASE = "https://www.googleapis.com/gmail/v1";
 const MAX_RETRY_ATTEMPTS = 3;
@@ -72,6 +73,11 @@ export class GmailClient {
   /**
    * Fetch with automatic retry on 429 (rate limit) responses.
    * Uses Retry-After header when available, otherwise exponential backoff.
+   *
+   * Every request is bounded by REQUEST_TIMEOUT_MS. Without it a connection
+   * that opens but never answers — captive portal, VPN drop, router up but no
+   * route — leaves the promise pending forever and the sync appears to hang
+   * with no way back. navigator.onLine does not catch those cases.
    */
   private async fetchWithRetry(
     url: string,
@@ -79,7 +85,7 @@ export class GmailClient {
   ): Promise<Response> {
     let lastResponse: Response | undefined;
     for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
-      const response = await fetch(url, options);
+      const response = await fetchWithTimeout(url, options);
       if (response.status !== 429) return response;
 
       lastResponse = response;
@@ -238,7 +244,7 @@ export class GmailClient {
   async deleteLabel(labelId: string): Promise<void> {
     const token = await this.getValidToken();
     const url = `${GMAIL_API_BASE}/users/me/labels/${labelId}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -254,7 +260,7 @@ export class GmailClient {
   async deleteThread(threadId: string): Promise<void> {
     const token = await this.getValidToken();
     const url = `${GMAIL_API_BASE}/users/me/threads/${threadId}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });

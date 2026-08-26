@@ -35,8 +35,11 @@ export function EmailRenderer({
   const [cidMap, setCidMap] = useState<Map<string, string>>(new Map());
 
   const theme = useUIStore((s) => s.theme);
+  const emailBodyTheme = useUIStore((s) => s.emailBodyTheme);
   const isDark = theme === "dark"
     || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  // Reader's explicit choice for the message body, independent of the app chrome
+  const bodyDark = emailBodyTheme === "dark";
 
   const shouldBlock = blockImages && !senderAllowlisted && !overrideShow;
 
@@ -126,10 +129,13 @@ export function EmailRenderer({
     if (!doc) return;
 
     doc.open();
-    // Plain text: blend with app theme (dark text on light bg, light text on dark bg)
-    // HTML emails: always render on a light background since senders design for white/light
-    const plainTextDark = isDark && isPlainText;
-    const htmlDark = isDark && !isPlainText;
+    // Plain text blends with the app theme. HTML mail is authored against white
+    // backgrounds, so it renders light unless the reader forces dark — in which
+    // case it is inverted (and media re-inverted) rather than recoloured, since
+    // sender styles are inline and cannot be overridden reliably.
+    const plainTextDark = (isDark || bodyDark) && isPlainText;
+    const invertHtml = bodyDark && !isPlainText;
+    const htmlLightBackdrop = !isPlainText && !bodyDark;
     doc.write(`<!DOCTYPE html>
 <html>
 <head>
@@ -141,7 +147,7 @@ export function EmailRenderer({
       font-size: 14px;
       line-height: 1.6;
       color: ${plainTextDark ? "#e5e7eb" : "#1f2937"};
-      background: ${htmlDark ? "#f8f9fa" : "transparent"};
+      background: ${htmlLightBackdrop && isDark ? "#f8f9fa" : "transparent"};
       word-wrap: break-word;
       overflow-wrap: break-word;
       overflow: hidden;
@@ -156,6 +162,13 @@ export function EmailRenderer({
     }
     pre { overflow-x: auto; }
     table { max-width: 100%; }
+    ${invertHtml ? `
+    html { background: #0f172a; }
+    body { filter: invert(1) hue-rotate(180deg); background: #ffffff; }
+    /* Undo the inversion for real imagery so photos and logos stay true */
+    img, video, canvas, svg, iframe, [style*="background-image"] {
+      filter: invert(1) hue-rotate(180deg);
+    }` : ""}
   </style>
 </head>
 <body>${bodyHtml}</body>

@@ -60,6 +60,8 @@ import type { SidebarNavItem } from "@/stores/uiStore";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import appIcon from "@/assets/icon.png";
+import { getMailboxUsage, type MailboxUsage } from "@/services/db/messages";
+import { formatFileSize } from "@/utils/fileTypeHelpers";
 
 type SettingsTab = "general" | "notifications" | "composing" | "mail-rules" | "people" | "accounts" | "shortcuts" | "ai" | "about";
 
@@ -138,6 +140,8 @@ export function SettingsPage() {
   const [clearingCache, setClearingCache] = useState(false);
   const [reauthStatus, setReauthStatus] = useState<Record<string, "idle" | "authorizing" | "done" | "error">>({});
   const [resyncStatus, setResyncStatus] = useState<Record<string, "idle" | "syncing" | "done" | "error">>({});
+  const [showMailboxUsage, setShowMailboxUsage] = useState(false);
+  const [mailboxUsage, setMailboxUsage] = useState<Map<string, MailboxUsage>>(() => new Map());
   const [autoArchiveCategories, setAutoArchiveCategories] = useState<Set<string>>(() => new Set());
   const [smartNotifications, setSmartNotifications] = useState(true);
   const [notifyCategories, setNotifyCategories] = useState<Set<string>>(() => new Set(["Primary"]));
@@ -155,6 +159,12 @@ export function SettingsPage() {
       setClientId(id ?? "");
       const secret = await getSecureSetting("google_client_secret");
       setClientSecret(secret ?? "");
+      const usageSetting = await getSetting("show_mailbox_usage");
+      setShowMailboxUsage(usageSetting === "true");
+      if (usageSetting === "true") {
+        getMailboxUsage().then(setMailboxUsage).catch(() => {});
+      }
+
       const blockImg = await getSetting("block_remote_images");
       setBlockRemoteImages(blockImg !== "false");
       const phishingEnabled = await getSetting("phishing_detection_enabled");
@@ -847,6 +857,19 @@ export function SettingsPage() {
               {activeTab === "accounts" && (
                 <>
                   <Section title="Mail Accounts">
+                    <ToggleRow
+                      label="Show mailbox usage"
+                      description="Size, message and conversation counts per account, measured from what has been synced to this machine"
+                      checked={showMailboxUsage}
+                      onToggle={async () => {
+                        const newVal = !showMailboxUsage;
+                        setShowMailboxUsage(newVal);
+                        await setSetting("show_mailbox_usage", newVal ? "true" : "false");
+                        if (newVal) {
+                          getMailboxUsage().then(setMailboxUsage).catch(() => {});
+                        }
+                      }}
+                    />
                     {accounts.filter((a) => a.provider !== "caldav").length === 0 ? (
                       <p className="text-sm text-text-tertiary">
                         No mail accounts connected
@@ -870,6 +893,21 @@ export function SettingsPage() {
                                 <div className="text-xs text-text-tertiary">
                                   {account.email}
                                 </div>
+                                {showMailboxUsage && mailboxUsage.get(account.id) && (
+                                  <div className="mt-0.5 text-xs text-text-tertiary">
+                                    {formatFileSize(mailboxUsage.get(account.id)!.totalBytes)}
+                                    {" · "}
+                                    {mailboxUsage.get(account.id)!.messageCount.toLocaleString()} messages
+                                    {" · "}
+                                    {mailboxUsage.get(account.id)!.threadCount.toLocaleString()} conversations
+                                    {mailboxUsage.get(account.id)!.cachedAttachmentBytes > 0 && (
+                                      <>
+                                        {" · "}
+                                        {formatFileSize(mailboxUsage.get(account.id)!.cachedAttachmentBytes)} cached
+                                      </>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex items-center gap-3">
                                 <button

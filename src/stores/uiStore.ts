@@ -8,6 +8,7 @@ type ReadFilter = "all" | "read" | "unread";
 export type EmailDensity = "compact" | "default" | "spacious";
 export type DefaultReplyMode = "reply" | "replyAll";
 export type MarkAsReadBehavior = "instant" | "2s" | "manual";
+export type EmailBodyTheme = "light" | "dark";
 export type FontScale = "small" | "default" | "large" | "xlarge";
 export type InboxViewMode = "unified" | "split";
 
@@ -26,6 +27,9 @@ interface UIState {
   emailDensity: EmailDensity;
   defaultReplyMode: DefaultReplyMode;
   markAsReadBehavior: MarkAsReadBehavior;
+  /** How message bodies are rendered. HTML mail is authored for white
+   *  backgrounds, so it stays light unless the reader forces dark. */
+  emailBodyTheme: EmailBodyTheme;
   fontScale: FontScale;
   colorTheme: ColorThemeId;
   sendAndArchive: boolean;
@@ -47,6 +51,8 @@ interface UIState {
   setEmailDensity: (density: EmailDensity) => void;
   setDefaultReplyMode: (mode: DefaultReplyMode) => void;
   setMarkAsReadBehavior: (behavior: MarkAsReadBehavior) => void;
+  setEmailBodyTheme: (theme: EmailBodyTheme) => void;
+  toggleEmailBodyTheme: () => void;
   setFontScale: (scale: FontScale) => void;
   setColorTheme: (theme: ColorThemeId) => void;
   setSendAndArchive: (enabled: boolean) => void;
@@ -71,6 +77,7 @@ export const useUIStore = create<UIState>((set) => ({
   emailDensity: "default",
   defaultReplyMode: "reply",
   markAsReadBehavior: "instant",
+  emailBodyTheme: "light",
   fontScale: "default",
   colorTheme: "sage",
   sendAndArchive: false,
@@ -117,6 +124,17 @@ export const useUIStore = create<UIState>((set) => ({
     setSetting("default_reply_mode", defaultReplyMode).catch(() => {});
     set({ defaultReplyMode });
   },
+  setEmailBodyTheme: (emailBodyTheme) => {
+    setSetting("email_body_theme", emailBodyTheme).catch(() => {});
+    set({ emailBodyTheme });
+  },
+  toggleEmailBodyTheme: () =>
+    set((state) => {
+      const emailBodyTheme: EmailBodyTheme =
+        state.emailBodyTheme === "light" ? "dark" : "light";
+      setSetting("email_body_theme", emailBodyTheme).catch(() => {});
+      return { emailBodyTheme };
+    }),
   setMarkAsReadBehavior: (markAsReadBehavior) => {
     setSetting("mark_as_read_behavior", markAsReadBehavior).catch(() => {});
     set({ markAsReadBehavior });

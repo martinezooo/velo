@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { AiActivityIndicator } from "./components/ui/AiActivityIndicator";
 import { Outlet } from "@tanstack/react-router";
 import { Sidebar } from "./components/layout/Sidebar";
 import { AddAccount } from "./components/accounts/AddAccount";
@@ -247,6 +248,12 @@ export default function App() {
         const savedMarkRead = await getSetting("mark_as_read_behavior");
         if (savedMarkRead === "instant" || savedMarkRead === "2s" || savedMarkRead === "manual") {
           ui.setMarkAsReadBehavior(savedMarkRead);
+        }
+
+        // Restore email body theme
+        const savedBodyTheme = await getSetting("email_body_theme");
+        if (savedBodyTheme === "light" || savedBodyTheme === "dark") {
+          ui.setEmailBodyTheme(savedBodyTheme);
         }
 
         // Restore send and archive
@@ -607,6 +614,7 @@ export default function App() {
           onClose={() => setShowAskInbox(false)}
         />
       </ErrorBoundary>
+      <AiActivityIndicator />
       <ContextMenuPortal />
       <MoveToFolderDialog
         isOpen={moveToFolderState.open}

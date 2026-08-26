@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { fetchWithTimeout } from "@/utils/fetchWithTimeout";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -150,7 +151,7 @@ async function exchangeCodeForTokens(
   };
   if (clientSecret) params.client_secret = clientSecret;
 
-  const response = await fetch(GOOGLE_TOKEN_URL, {
+  const response = await fetchWithTimeout(GOOGLE_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(params),
@@ -179,7 +180,7 @@ export async function refreshAccessToken(
   };
   if (clientSecret) params.client_secret = clientSecret;
 
-  const response = await fetch(GOOGLE_TOKEN_URL, {
+  const response = await fetchWithTimeout(GOOGLE_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(params),
@@ -194,7 +195,7 @@ export async function refreshAccessToken(
 }
 
 async function fetchUserInfo(accessToken: string): Promise<UserInfo> {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     "https://www.googleapis.com/oauth2/v2/userinfo",
     {
       headers: { Authorization: `Bearer ${accessToken}` },

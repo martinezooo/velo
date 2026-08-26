@@ -172,3 +172,63 @@ export async function getRecentSentMessages(
     [accountId, accountEmail, limit],
   );
 }
+
+export interface MailboxUsage {
+  accountId: string;
+  messageCount: number;
+  threadCount: number;
+  /** Sum of RFC822 sizes, i.e. what the mailbox occupies on the server. */
+  totalBytes: number;
+  /** Bytes held by attachments cached on this machine. */
+  cachedAttachmentBytes: number;
+}
+
+/**
+ * Per-account mailbox usage, computed locally from synced messages.
+ *
+ * Gmail's storage quota lives behind the Drive API, which Revelo does not
+ * request a scope for, so this reports the size of what has actually been
+ * synced rather than the server-side total.
+ */
+export async function getMailboxUsage(): Promise<Map<string, MailboxUsage>> {
+  const db = await getDb();
+
+  const rows = await db.select<
+    { account_id: string; message_count: number; total_bytes: number | null }[]
+  >(
+    `SELECT account_id,
+            COUNT(*) as message_count,
+            SUM(COALESCE(raw_size, 0)) as total_bytes
+     FROM messages
+     GROUP BY account_id`,
+  );
+
+  const threadRows = await db.select<{ account_id: string; thread_count: number }[]>(
+    "SELECT account_id, COUNT(*) as thread_count FROM threads GROUP BY account_id",
+  );
+  const threadsByAccount = new Map(
+    threadRows.map((r) => [r.account_id, r.thread_count]),
+  );
+
+  const cacheRows = await db.select<{ account_id: string; cached_bytes: number | null }[]>(
+    `SELECT account_id, SUM(COALESCE(cache_size, 0)) as cached_bytes
+     FROM attachments
+     WHERE local_path IS NOT NULL
+     GROUP BY account_id`,
+  );
+  const cacheByAccount = new Map(
+    cacheRows.map((r) => [r.account_id, r.cached_bytes ?? 0]),
+  );
+
+  const usage = new Map<string, MailboxUsage>();
+  for (const row of rows) {
+    usage.set(row.account_id, {
+      accountId: row.account_id,
+      messageCount: row.message_count,
+      threadCount: threadsByAccount.get(row.account_id) ?? 0,
+      totalBytes: row.total_bytes ?? 0,
+      cachedAttachmentBytes: cacheByAccount.get(row.account_id) ?? 0,
+    });
+  }
+  return usage;
+}
