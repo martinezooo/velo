@@ -201,6 +201,8 @@ Key tables (37 total): `accounts` (with `provider` "gmail_api"|"imap", IMAP/SMTP
 - **Path alias**: `@/*` maps to `src/*`
 - **Email HTML rendering**: DOMPurify sanitization, rendered in sandboxed iframe (`allow-same-origin` only). Strips remote images by default (uses `data-blocked-src` attributes), allowlist per sender
 - **Thread deletion**: Two-stage — first trash, then permanent delete from DB if already in trash
+- **Thread identity is composite**: Thread IDs are unique only *within* an account (DB primary key is `(account_id, id)`, and IMAP thread IDs hash the root Message-ID, so one message delivered to two accounts yields the same ID in both). Client-side, threads are always addressed by the composite key from `utils/threadKey.ts` — `threadStore.threadMap`, `selectedThreadIds`, drag payloads, and context-menu targets all key on it, never on a bare thread ID
+- **All inboxes (unified view)**: `accountStore.unifiedInbox` makes mail lists read from every mail account (`getViewAccountIds`) instead of `activeAccountId`; persisted in the `unified_inbox` setting. The selected thread's account travels in the `?acct=` search param. Actions must use the *thread's* `accountId`, not `activeAccountId` — bulk operations group the selection by account before calling a provider client. Custom labels and smart folders stay scoped to the active account
 - **Snooze**: Removes INBOX label and adds SNOOZED label (not just a flag)
 - **Draft auto-save**: 3-second debounce, not configurable
 - **Gmail History API**: Expires after ~30 days, triggers automatic full sync fallback

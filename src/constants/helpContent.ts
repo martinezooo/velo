@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Mail,
+  Layers,
   PenLine,
   Search,
   Tag,
@@ -1192,6 +1193,21 @@ export const HELP_CATEGORIES: HelpCategory[] = [
           { text: "Each account has independent inbox, labels, and sync." },
           { text: "Add or remove accounts in Settings > Accounts." },
           { text: "Re-authorize a Gmail account if the token expires." },
+        ],
+        relatedSettingsTab: "accounts",
+      },
+      {
+        id: "all-inboxes",
+        icon: Layers,
+        title: "All inboxes",
+        summary: "Read mail from every account in one list.",
+        description:
+          "Pick \u201CAll inboxes\u201D in the account switcher to see every account's mail merged into a single list, newest first. Each row shows a coloured dot and the address of the mailbox it came from, and opening, archiving, or bulk-acting on a conversation always uses that conversation's own account. Search covers every account while this view is active. It only appears once you have more than one mail account, and Velo remembers the choice between restarts.",
+        tips: [
+          { text: "Choose it at the top of the account switcher, above the account list." },
+          { text: "Multi-select can span accounts — each thread acts on its own mailbox." },
+          { text: "Pick a single account again to leave the view." },
+          { text: "Custom labels and smart folders stay tied to the selected account." },
         ],
         relatedSettingsTab: "accounts",
       },

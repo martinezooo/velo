@@ -107,7 +107,8 @@ velo/
 │   │                         # composer, label, contextMenu, shortcut, smartFolder, task
 │   ├── hooks/                # useKeyboardShortcuts, useClickOutside, useContextMenu
 │   ├── utils/                # crypto, date, emailBuilder, sanitize, imageBlocker,
-│   │                         # mailtoParser, fileUtils, templateVariables, noReply
+│   │                         # mailtoParser, fileUtils, templateVariables, noReply,
+│   │                         # threadKey (composite account+thread identity)
 │   ├── constants/            # Keyboard shortcuts, color themes, help content
 │   └── styles/               # Tailwind CSS v4 globals
 ├── src-tauri/
