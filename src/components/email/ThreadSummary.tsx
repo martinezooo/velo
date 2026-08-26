@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Sparkles, ChevronDown, ChevronUp, RefreshCw, AlertTriangle } from "lucide-react";
 import { runAiTask, describeAiError } from "@/stores/aiStatusStore";
+import { navigateToSettings } from "@/router/navigate";
 import { isAiAvailable } from "@/services/ai/providerManager";
 import { summarizeThread } from "@/services/ai/aiService";
 import { deleteAiCache } from "@/services/db/aiCache";
@@ -140,6 +141,13 @@ export function ThreadSummary({ threadId, accountId, messages }: ThreadSummaryPr
                   className="text-accent underline underline-offset-2 hover:text-accent-hover"
                 >
                   Try again
+                </button>
+                {" · "}
+                <button
+                  onClick={() => navigateToSettings("ai")}
+                  className="text-accent underline underline-offset-2 hover:text-accent-hover"
+                >
+                  Reconfigure
                 </button>
               </span>
             </div>

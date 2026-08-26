@@ -1,5 +1,6 @@
-import { Sparkles, AlertTriangle, X } from "lucide-react";
+import { Sparkles, AlertTriangle, X, SlidersHorizontal } from "lucide-react";
 import { useAiStatusStore } from "@/stores/aiStatusStore";
+import { navigateToSettings } from "@/router/navigate";
 
 /**
  * Floating indicator for AI work.
@@ -47,6 +48,16 @@ export function AiActivityIndicator() {
           {lastError!.label} failed
         </div>
         <div className="mt-0.5 text-xs text-text-secondary">{lastError!.message}</div>
+        <button
+          onClick={() => {
+            clearError();
+            navigateToSettings("ai");
+          }}
+          className="mt-1.5 inline-flex items-center gap-1 text-xs text-accent transition-colors hover:text-accent-hover"
+        >
+          <SlidersHorizontal size={11} />
+          Reconfigure
+        </button>
       </div>
       <button
         onClick={clearError}

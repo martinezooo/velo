@@ -172,6 +172,18 @@ export default function App() {
     };
   }, []);
 
+  // Keep the dock badge honest: sync completion, local read/unread changes, and
+  // a slow tick for anything that changed the DB without an event.
+  useEffect(() => {
+    const refresh = () => { updateBadgeCount(); };
+    window.addEventListener("velo-sync-done", refresh);
+    const timer = setInterval(() => updateBadgeCount(true), 60_000);
+    return () => {
+      window.removeEventListener("velo-sync-done", refresh);
+      clearInterval(timer);
+    };
+  }, []);
+
   // Listen for tray "Check for Mail" button
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -248,6 +260,14 @@ export default function App() {
         const savedMarkRead = await getSetting("mark_as_read_behavior");
         if (savedMarkRead === "instant" || savedMarkRead === "2s" || savedMarkRead === "manual") {
           ui.setMarkAsReadBehavior(savedMarkRead);
+        }
+
+        // Restore the last sync time so the sidebar is accurate before the
+        // first sync of this session finishes
+        const savedLastSync = await getSetting("last_sync_at");
+        const parsedLastSync = savedLastSync ? Number(savedLastSync) : NaN;
+        if (Number.isFinite(parsedLastSync) && parsedLastSync > 0) {
+          useUIStore.setState({ lastSyncAt: parsedLastSync });
         }
 
         // Restore email body theme
@@ -413,6 +433,7 @@ export default function App() {
       } else if (status === "done") {
         setSyncStatus("Sync complete");
         setTimeout(() => setSyncStatus(null), 2_000);
+        useUIStore.getState().setLastSyncAt(Date.now());
         window.dispatchEvent(new Event("velo-sync-done"));
         updateBadgeCount();
 

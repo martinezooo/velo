@@ -38,6 +38,7 @@ interface UIState {
   sidebarNavConfig: SidebarNavItem[] | null;
   reduceMotion: boolean;
   isOnline: boolean;
+  lastSyncAt: number | null;
   pendingOpsCount: number;
   isSyncingFolder: string | null;
   setTheme: (theme: Theme) => void;
@@ -64,6 +65,8 @@ interface UIState {
   setReduceMotion: (reduce: boolean) => void;
   setOnline: (online: boolean) => void;
   setPendingOpsCount: (count: number) => void;
+  /** Epoch ms of the last successful sync, restored across restarts. */
+  setLastSyncAt: (timestamp: number) => void;
   setSyncingFolder: (folder: string | null) => void;
 }
 
@@ -88,6 +91,7 @@ export const useUIStore = create<UIState>((set) => ({
   isOnline: true,
   pendingOpsCount: 0,
   isSyncingFolder: null,
+  lastSyncAt: null,
 
   setTheme: (theme) => set({ theme }),
   toggleSidebar: () =>
@@ -135,6 +139,10 @@ export const useUIStore = create<UIState>((set) => ({
       setSetting("email_body_theme", emailBodyTheme).catch(() => {});
       return { emailBodyTheme };
     }),
+  setLastSyncAt: (lastSyncAt) => {
+    setSetting("last_sync_at", String(lastSyncAt)).catch(() => {});
+    set({ lastSyncAt });
+  },
   setMarkAsReadBehavior: (markAsReadBehavior) => {
     setSetting("mark_as_read_behavior", markAsReadBehavior).catch(() => {});
     set({ markAsReadBehavior });
