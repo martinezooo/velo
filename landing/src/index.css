@@ -10,8 +10,8 @@
   --color-text-secondary: #a1a1aa;
   --color-text-muted: #71717a;
 
-  --color-accent: #6366F1;
-  --color-accent-hover: #818CF8;
+  --color-accent: #34A87F;
+  --color-accent-hover: #4FBF95;
 
   --color-border: rgba(255, 255, 255, 0.08);
 }
@@ -57,7 +57,7 @@ body {
 
 /* ── Gradient text ── */
 .gradient-text {
-  background: linear-gradient(135deg, #e0e7ff 0%, #818CF8 50%, #6366F1 100%);
+  background: linear-gradient(135deg, #d8efe5 0%, #74CFA9 50%, #2F8B6C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

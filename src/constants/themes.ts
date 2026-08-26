@@ -1,4 +1,5 @@
 export type ColorThemeId =
+  | "sage"
   | "indigo"
   | "rose"
   | "emerald"
@@ -25,6 +26,26 @@ export interface ColorTheme {
 }
 
 export const COLOR_THEMES: ColorTheme[] = [
+  {
+    // Revelo's default — a calm, desaturated green that matches the app icon.
+    id: "sage",
+    name: "Sage",
+    swatch: "#2f8b6c",
+    light: {
+      accent: "#2f8b6c",
+      accentHover: "#256f56",
+      accentLight: "#d8efe5",
+      bgSelected: "rgba(216, 239, 229, 0.75)",
+      sidebarActive: "#2f8b6c",
+    },
+    dark: {
+      accent: "#5fc79f",
+      accentHover: "#43b287",
+      accentLight: "#14342a",
+      bgSelected: "rgba(20, 52, 42, 0.62)",
+      sidebarActive: "#5fc79f",
+    },
+  },
   {
     id: "indigo",
     name: "Indigo",

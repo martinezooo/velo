@@ -468,7 +468,7 @@ export default function App() {
     const props = ["--color-accent", "--color-accent-hover", "--color-accent-light", "--color-bg-selected", "--color-sidebar-active"];
 
     const apply = () => {
-      if (colorTheme === "indigo") {
+      if (colorTheme === "sage") {
         // Default theme — remove inline overrides, let CSS handle it
         for (const p of props) root.style.removeProperty(p);
         return;

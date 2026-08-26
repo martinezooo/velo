@@ -1036,7 +1036,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
         title: "Task manager",
         summary: "Full task management with priorities, due dates, and subtasks.",
         description:
-          "Velo includes a built-in task manager accessible from the sidebar or via the g then k shortcut. Create tasks with titles, descriptions, priorities (none, low, medium, high, urgent), due dates, and tags. Tasks can have one level of subtasks for breaking down complex items. Drag to reorder tasks, filter by status or priority, and group by priority, due date, or tag. Completed tasks can be shown or hidden. The task sidebar panel shows tasks linked to the current email thread.",
+          "Revelo includes a built-in task manager accessible from the sidebar or via the g then k shortcut. Create tasks with titles, descriptions, priorities (none, low, medium, high, urgent), due dates, and tags. Tasks can have one level of subtasks for breaking down complex items. Drag to reorder tasks, filter by status or priority, and group by priority, due date, or tag. Completed tasks can be shown or hidden. The task sidebar panel shows tasks linked to the current email thread.",
         tips: [
           { text: "Go to Tasks page", shortcut: "g k" },
           { text: "Open tasks from the Tasks item in the sidebar." },
@@ -1202,7 +1202,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
         title: "All inboxes",
         summary: "Read mail from every account in one list.",
         description:
-          "Pick \u201CAll inboxes\u201D in the account switcher to see every account's mail merged into a single list, newest first. Each row shows a coloured dot and the address of the mailbox it came from, and opening, archiving, or bulk-acting on a conversation always uses that conversation's own account. Search covers every account while this view is active. It only appears once you have more than one mail account, and Velo remembers the choice between restarts.",
+          "Pick \u201CAll inboxes\u201D in the account switcher to see every account's mail merged into a single list, newest first. Each row shows a coloured dot and the address of the mailbox it came from, and opening, archiving, or bulk-acting on a conversation always uses that conversation's own account. Search covers every account while this view is active. It only appears once you have more than one mail account, and Revelo remembers the choice between restarts.",
         tips: [
           { text: "Choose it at the top of the account switcher, above the account list." },
           { text: "Multi-select can span accounts — each thread acts on its own mailbox." },

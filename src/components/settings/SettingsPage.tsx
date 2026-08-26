@@ -518,7 +518,7 @@ export function SettingsPage() {
                   <Section title="Startup">
                     <ToggleRow
                       label="Launch at login"
-                      description="Start Velo automatically when you log in (minimized to tray)"
+                      description="Start Revelo automatically when you log in (minimized to tray)"
                       checked={autostartEnabled}
                       onToggle={handleAutostartToggle}
                     />
@@ -1741,11 +1741,11 @@ function AboutTab() {
 
   return (
     <>
-      <Section title="Velo Mail">
+      <Section title="Revelo Mail">
         <div className="flex items-center gap-3 mb-2">
-          <img src={appIcon} alt="Velo" className="w-12 h-12 rounded-xl" />
+          <img src={appIcon} alt="Revelo" className="w-12 h-12 rounded-xl" />
           <div>
-            <h3 className="text-base font-semibold text-text-primary">Velo</h3>
+            <h3 className="text-base font-semibold text-text-primary">Revelo</h3>
             <p className="text-sm text-text-tertiary">
               {appVersion ? `Version ${appVersion}` : "Loading..."}
             </p>
@@ -1812,7 +1812,7 @@ function AboutTab() {
             </button>
           </p>
           <p className="text-xs text-text-tertiary leading-relaxed">
-            Copyright 2025 Velo Mail. You may use, distribute, and modify this software under the terms of the Apache 2.0 license. This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
+            Copyright 2026 Revelo Mail. You may use, distribute, and modify this software under the terms of the Apache 2.0 license. This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
           </p>
         </div>
       </Section>

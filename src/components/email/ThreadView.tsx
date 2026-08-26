@@ -476,10 +476,13 @@ export function ThreadView({ thread }: ThreadViewProps) {
         <>
           {/* Backdrop for overlay mode (narrow widths) */}
           <div
-            className="absolute inset-0 z-10 bg-black/20 @[640px]:hidden"
+            className="absolute inset-0 z-10 bg-black/40 @[640px]:hidden"
             onClick={toggleContactSidebar}
           />
-          <div className="absolute right-0 top-0 bottom-0 z-20 shadow-xl @[640px]:relative @[640px]:z-auto @[640px]:shadow-none">
+          {/* Opaque in overlay mode: the sidebar's own bg token is translucent
+              and would show the thread text through it. Inline (wide) mode
+              keeps the translucent glass look. */}
+          <div className="absolute right-0 top-0 bottom-0 z-20 shadow-xl bg-bg-overlay @[640px]:relative @[640px]:z-auto @[640px]:shadow-none @[640px]:bg-transparent">
             <ContactSidebar
               email={primarySender}
               name={primarySenderName}

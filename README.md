@@ -1,16 +1,16 @@
 <p align="center">
-  <img src="assets/icon.png?v1" alt="Velo" width="200" height="200" style="border-radius: 24px;" />
+  <img src="assets/icon.png?v1" alt="Revelo" width="200" height="200" style="border-radius: 24px;" />
 </p>
 
-<h1 align="center">Velo</h1>
+<h1 align="center">Revelo</h1>
 
 <p align="center">
-  <strong>Email at the speed of thought.</strong>
+  <strong>One inbox for all.</strong>
 </p>
 
 <p align="center">
-  A blazing-fast, keyboard-first desktop email client built with Tauri, React, and Rust.<br />
-  Local-first. Privacy-focused. AI-powered.
+  AI-powered. Open-source. Blazing fast.<br />
+  A keyboard-first desktop email client built with Tauri, React, and Rust.
 </p>
 
 <p align="center">
@@ -30,9 +30,9 @@
 
 ---
 
-## Why Velo?
+## Why Revelo?
 
-Most email clients are slow, bloated, or send your data to someone else's server. Velo is different:
+Most email clients are slow, bloated, or send your data to someone else's server. Revelo is different:
 
 - **Local-first** -- Your emails live in a local SQLite database. No middleman servers. Read your mail offline.
 - **Keyboard-driven** -- Superhuman-inspired shortcuts let you fly through your inbox without touching the mouse.
@@ -89,7 +89,7 @@ Thread summaries, smart reply suggestions, AI compose & reply, text transform (i
 
 ### Calendar
 
-Google Calendar sync with month, week, and day views. Create events without leaving Velo.
+Google Calendar sync with month, week, and day views. Create events without leaving Revelo.
 
 ### UI & Design
 
@@ -122,24 +122,24 @@ Google Calendar sync with month, week, and day views. Create events without leav
 
 Download the latest release for your platform:
 
-**[Download Velo](https://github.com/avihaymenahem/velo/releases/latest)** -- Windows `.msi` / `.exe` &nbsp;&bull;&nbsp; macOS `.dmg` &nbsp;&bull;&nbsp; Linux `.deb` / `.AppImage`
+**[Download Revelo](https://github.com/martinezooo/velo/releases/latest)** -- Windows `.msi` / `.exe` &nbsp;&bull;&nbsp; macOS `.dmg` &nbsp;&bull;&nbsp; Linux `.deb` / `.AppImage`
 
 No build tools or programming knowledge required -- just download, install, and run.
 
 ### Account setup
 
-**Gmail:** Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com/) (enable Gmail API + Calendar API), then enter your Client ID in Velo's Settings. No client secret needed (PKCE).
+**Gmail:** Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com/) (enable Gmail API + Calendar API), then enter your Client ID in Revelo's Settings. No client secret needed (PKCE).
 
-**IMAP/SMTP:** Click "Add IMAP Account" in the account switcher. Enter your email and password -- Velo auto-discovers server settings for popular providers (Outlook, Yahoo, iCloud, Fastmail, etc.). For other providers, enter IMAP/SMTP server details manually. No Google Cloud project needed.
+**IMAP/SMTP:** Click "Add IMAP Account" in the account switcher. Enter your email and password -- Revelo auto-discovers server settings for popular providers (Outlook, Yahoo, iCloud, Fastmail, etc.). For other providers, enter IMAP/SMTP server details manually. No Google Cloud project needed.
 
 **AI (optional):** Add an API key for [Anthropic](https://console.anthropic.com/), [OpenAI](https://platform.openai.com/), or [Google Gemini](https://aistudio.google.com/) in Settings. Then select which model to use for each provider.
 
 ### Building from source
 
-For developers who want to build Velo themselves or contribute:
+For developers who want to build Revelo themselves or contribute:
 
 ```bash
-git clone https://github.com/avihaymenahem/velo.git
+git clone https://github.com/martinezooo/velo.git
 cd velo
 npm install
 npm run tauri dev

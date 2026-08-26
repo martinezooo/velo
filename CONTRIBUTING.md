@@ -1,6 +1,6 @@
-# Contributing to Velo
+# Contributing to Revelo
 
-Thank you for your interest in contributing to Velo! This guide will help you get started.
+Thank you for your interest in contributing to Revelo! This guide will help you get started.
 
 ## Getting Started
 
@@ -13,7 +13,7 @@ Thank you for your interest in contributing to Velo! This guide will help you ge
 ### Setup
 
 ```bash
-git clone https://github.com/avihaymenahem/velo.git
+git clone https://github.com/martinezooo/velo.git
 cd velo
 npm install
 npm run tauri dev
@@ -93,16 +93,16 @@ chore: bump tauri to v2.10
 
 ## Reporting Bugs
 
-Use the [bug report template](https://github.com/avihaymenahem/velo/issues/new?template=bug_report.yml) on GitHub Issues. Include:
+Use the [bug report template](https://github.com/martinezooo/velo/issues/new?template=bug_report.yml) on GitHub Issues. Include:
 
 - Steps to reproduce
 - Expected vs. actual behavior
-- OS and Velo version
+- OS and Revelo version
 - Screenshots or logs if applicable
 
 ## Feature Requests
 
-Use the [feature request template](https://github.com/avihaymenahem/velo/issues/new?template=feature_request.yml) on GitHub Issues.
+Use the [feature request template](https://github.com/martinezooo/velo/issues/new?template=feature_request.yml) on GitHub Issues.
 
 ## License
 

@@ -17,7 +17,7 @@ export function Hero() {
           transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/[0.06] bg-white/[0.03]">
-            <img src="/logo-white.svg" alt="Velo" className="h-4 w-auto" />
+            <img src="/logo-white.svg" alt="Revelo" className="h-4 w-auto" />
             <span className="text-sm text-text-secondary">Open source desktop email client</span>
           </div>
         </motion.div>
@@ -29,9 +29,9 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05 }}
         >
-          <span className="text-text-primary">The email client </span>
+          <span className="text-text-primary">One inbox </span>
           <br />
-          <span className="gradient-text">you'd build for yourself</span>
+          <span className="gradient-text">for all.</span>
         </motion.h1>
 
         {/* Subline */}
@@ -41,9 +41,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          Keyboard-first, AI-powered, and completely private.
-          <br className="hidden sm:block" />
-          Free forever because it's open source.
+          AI-powered. Open-source. Blazing fast
         </motion.p>
 
         {/* CTAs */}
@@ -53,11 +51,11 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
         >
-          <a href="https://github.com/avihaymenahem/velo/releases" target="_blank" rel="noopener noreferrer" className="btn-primary">
+          <a href="https://github.com/martinezooo/velo/releases" target="_blank" rel="noopener noreferrer" className="btn-primary">
             <Download size={17} />
             Download for Free
           </a>
-          <a href="https://github.com/avihaymenahem/velo" target="_blank" rel="noopener noreferrer" className="btn-secondary">
+          <a href="https://github.com/martinezooo/velo" target="_blank" rel="noopener noreferrer" className="btn-secondary">
             <Github size={16} />
             View on GitHub
           </a>
