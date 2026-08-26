@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import { getGravatarUrl } from "@/services/contacts/gravatar";
 import { getSenderDomainIconUrl } from "@/services/contacts/senderIcon";
+import { getCachedAvatar } from "@/services/contacts/avatarCache";
 import { useUIStore } from "@/stores/uiStore";
 
 /**
@@ -58,13 +59,16 @@ export const SenderAvatar = memo(function SenderAvatar({
 
   const initial = (name?.[0] ?? address?.[0] ?? "?").toUpperCase();
 
-  // Sources are tried in order: a personal Gravatar, then the sender's
-  // organisation icon, then initials. Each failure advances the stage.
+  // Sources in order of how well they identify the person: the photo Google
+  // already has for them, then a Gravatar, then their organisation's icon,
+  // then initials. Each failure advances the stage.
   const sources = useMemo(() => {
     if (!address || !showAvatars) return [] as string[];
-    return [getGravatarUrl(address), getSenderDomainIconUrl(address)].filter(
-      (url): url is string => url !== null,
-    );
+    return [
+      getCachedAvatar(address),
+      getGravatarUrl(address),
+      getSenderDomainIconUrl(address),
+    ].filter((url): url is string => url !== null);
   }, [address, showAvatars]);
 
   const [stage, setStage] = useState(0);

@@ -217,7 +217,10 @@ export function EmailRenderer({
       observerRef.current?.disconnect();
       cancelAnimationFrame(rafRef.current);
     };
-  }, [bodyHtml, isDark, isPlainText]);
+    // bodyDark/bodyDim belong here: the reader's brightness choice changes the
+    // document that gets written, and without them the iframe kept whatever it
+    // was first rendered with.
+  }, [bodyHtml, isDark, isPlainText, bodyDark, bodyDim]);
 
   const handleLoadImages = useCallback(() => {
     setOverrideShow(true);

@@ -1,5 +1,6 @@
 import { Sun, SunDim, Moon } from "lucide-react";
 import { useUIStore } from "@/stores/uiStore";
+import { useStatusToastStore } from "@/stores/statusToastStore";
 
 /**
  * How message bodies are painted, cycled from the title bar so it is reachable
@@ -10,6 +11,18 @@ import { useUIStore } from "@/stores/uiStore";
 export function BodyThemeSwitch() {
   const emailBodyTheme = useUIStore((s) => s.emailBodyTheme);
   const toggle = useUIStore((s) => s.toggleEmailBodyTheme);
+  const showToast = useStatusToastStore((s) => s.showToast);
+
+  const announce = () => {
+    toggle();
+    // Read the value the store just committed, not the stale render-time one
+    const next = useUIStore.getState().emailBodyTheme;
+    showToast({
+      light: "Message bodies: original brightness",
+      dim: "Message bodies: dimmed — colours kept, glare reduced",
+      dark: "Message bodies: dark — inverted, photos kept true",
+    }[next]);
+  };
 
   const { Icon, label, tint } = {
     light: { Icon: Sun, label: "Message bodies: bright", tint: "text-sidebar-text/40" },
@@ -19,7 +32,7 @@ export function BodyThemeSwitch() {
 
   return (
     <button
-      onClick={toggle}
+      onClick={announce}
       title={`${label} — click to change`}
       aria-label={`${label}. Click to change.`}
       className="flex shrink-0 items-center rounded px-1.5 py-1 transition-colors hover:bg-sidebar-hover"

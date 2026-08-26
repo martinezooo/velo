@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useStatusToastStore } from "./stores/statusToastStore";
 import { AiActivityIndicator } from "./components/ui/AiActivityIndicator";
 import { Outlet } from "@tanstack/react-router";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -106,6 +107,8 @@ export default function App() {
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const toastMessage = useStatusToastStore((s) => s.message);
+  const toastTone = useStatusToastStore((s) => s.tone);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showAskInbox, setShowAskInbox] = useState(false);
@@ -188,6 +191,36 @@ export default function App() {
     return () => {
       window.removeEventListener("velo-sync-done", harvest);
       clearTimeout(initial);
+    };
+  }, []);
+
+  // Contact photos from Google, and the in-memory cache the list reads from
+  useEffect(() => {
+    const refreshCache = () => {
+      import("./services/contacts/avatarCache")
+        .then(({ loadAvatarCache }) => loadAvatarCache())
+        .catch(() => {});
+    };
+    refreshCache();
+
+    const syncPhotos = () => {
+      const google = useAccountStore.getState().accounts
+        .filter((a) => a.provider !== "imap" && a.provider !== "caldav");
+      if (google.length === 0) return;
+      import("./services/contacts/googleContacts")
+        .then(async ({ syncGoogleContactPhotos }) => {
+          for (const account of google) {
+            await syncGoogleContactPhotos(account.id);
+          }
+        })
+        .catch(() => {});
+    };
+    // After mail sync, so the contact book exists before photos are attached
+    window.addEventListener("velo-sync-done", syncPhotos);
+    window.addEventListener("velo-contact-photos-updated", refreshCache);
+    return () => {
+      window.removeEventListener("velo-sync-done", syncPhotos);
+      window.removeEventListener("velo-contact-photos-updated", refreshCache);
     };
   }, []);
 
@@ -629,14 +662,17 @@ export default function App() {
         </DndProvider>
       </div>
 
-      {/* Sync status bar */}
-      {syncStatus && (
+      {/* Status bar — sync progress, or a brief confirmation from a control.
+          Sync wins the slot, since it reports work actually in flight. */}
+      {(syncStatus || toastMessage) && (
         <div
           className={`fixed bottom-0 left-0 right-0 glass-panel text-white text-xs px-4 py-1.5 text-center z-40 animate-[slideUp_200ms_ease-out,fadeIn_200ms_ease-out] ${
-            syncStatus.startsWith("Sync failed") ? "bg-danger/90" : "bg-accent/90"
+            syncStatus
+              ? syncStatus.startsWith("Sync failed") ? "bg-danger/90" : "bg-accent/90"
+              : toastTone === "error" ? "bg-danger/90" : "bg-accent/90"
           }`}
         >
-          {syncStatus}
+          {syncStatus ?? toastMessage}
         </div>
       )}
 

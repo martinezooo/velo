@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Sparkles, AlertTriangle } from "lucide-react";
 import { useAiStatusStore } from "@/stores/aiStatusStore";
-import { isAiAvailable } from "@/services/ai/providerManager";
+import { isAiAvailable, getActiveProviderName } from "@/services/ai/providerManager";
 import { navigateToSettings } from "@/router/navigate";
+import { useStatusToastStore } from "@/stores/statusToastStore";
 
 /**
  * Always-visible AI status light in the title bar.
@@ -15,6 +16,8 @@ export function AiStatusChip() {
   const running = useAiStatusStore((s) => s.running);
   const lastError = useAiStatusStore((s) => s.lastError);
   const [available, setAvailable] = useState<boolean | null>(null);
+  const [providerName, setProviderName] = useState<string | null>(null);
+  const showToast = useStatusToastStore((s) => s.showToast);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,6 +25,9 @@ export function AiStatusChip() {
       isAiAvailable()
         .then((ok) => { if (!cancelled) setAvailable(ok); })
         .catch(() => { if (!cancelled) setAvailable(false); });
+      getActiveProviderName()
+        .then((name) => { if (!cancelled) setProviderName(name); })
+        .catch(() => { if (!cancelled) setProviderName(null); });
     };
     check();
     // Settings can turn AI on or off while the window is open
@@ -44,13 +50,31 @@ export function AiStatusChip() {
   const title = {
     working: `AI working${running > 1 ? ` (${running} tasks)` : ""}…`,
     error: `AI: ${lastError?.message ?? "last request failed"} — click to configure`,
-    ready: "AI ready — click to configure",
+    ready: "AI ready — click to check",
     off: "AI not configured — click to set it up",
   }[state];
 
   return (
     <button
-      onClick={() => navigateToSettings("ai")}
+      onClick={() => {
+        const provider = providerName ? ` (${providerName})` : "";
+        if (state === "working") {
+          showToast(`AI working — ${running} request${running > 1 ? "s" : ""} in flight`, "info");
+          return;
+        }
+        if (state === "ready") {
+          showToast(`AI connected${provider}`);
+          return;
+        }
+        // Nothing to report and something to fix, so go where the fix is
+        showToast(
+          state === "error"
+            ? `AI: ${lastError?.message ?? "last request failed"}`
+            : "AI not configured",
+          "error",
+        );
+        navigateToSettings("ai");
+      }}
       title={title}
       aria-label={title}
       className="flex shrink-0 items-center gap-1.5 rounded px-1.5 py-1 transition-colors hover:bg-sidebar-hover"
