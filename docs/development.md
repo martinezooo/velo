@@ -102,3 +102,29 @@ To enable AI features, add your API key for one or more providers in Settings:
 - **Google Gemini** -- [Get API key](https://aistudio.google.com/) -- 2.5 Flash (default), 2.5 Pro
 
 After adding an API key, select which model to use for each provider in Settings > AI.
+
+## Checking what actually gets sent
+
+Unit tests cover the message builder, but they cannot tell you what survives a
+real trip through a provider. For that there is a catch-all lab mailbox:
+anything addressed to `<anything>@m.x.3mb.be` lands in Mailpit, whose API
+returns the full RFC822 source.
+
+```bash
+set -a; . ~/.config/bugbounty/mailpit.env; set +a
+curl -s -u "$MAILPIT_USERNAME:$MAILPIT_PASSWORD" "$MAILPIT_URL/api/v1/messages?limit=5"
+curl -s -u "$MAILPIT_USERNAME:$MAILPIT_PASSWORD" "$MAILPIT_URL/api/v1/message/<ID>/raw"
+```
+
+Send a reply from the app to `revelo-test@m.x.3mb.be`, then read `/raw` to check
+`In-Reply-To`, `References`, recipient lists, RFC 2047 header encoding and the
+MIME structure.
+
+Two things to know before trusting a green result:
+
+- The lab does **not** verify SPF, DKIM or DMARC — nothing is rejected on the
+  way in. Delivery there proves the message arrived and shows its shape; it says
+  nothing about whether it authenticated. For that, send a copy to an ordinary
+  Gmail address and read its `Authentication-Results` header.
+- The lab cannot send outbound, by design. Seed a thread from somewhere else and
+  reply *to* the lab rather than expecting mail to originate there.
