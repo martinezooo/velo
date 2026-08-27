@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { buildReferences, replySubject } from "@/utils/addresses";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { isAiAvailable } from "@/services/ai/providerManager";
 import { generateSmartReplies } from "@/services/ai/aiService";
@@ -70,10 +71,15 @@ export function SmartReplySuggestions({ threadId, accountId, messages, noReply }
     openComposer({
       mode: "reply",
       to: replyTo ? [replyTo] : [],
-      subject: `Re: ${lastMessage.subject ?? ""}`,
+      subject: replySubject(lastMessage.subject),
       bodyHtml: `<p>${replyText}</p>`,
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
   }, [messages, openComposer]);
 

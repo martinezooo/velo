@@ -11,7 +11,13 @@ import { buildRawEmail } from "@/utils/emailBuilder";
 import { upsertContact, recordContactUse } from "@/services/db/contacts";
 import { getSetting } from "@/services/db/settings";
 import { getDefaultSignature } from "@/services/db/signatures";
-import { splitAddressList, withoutOwnAddresses, buildReferences } from "@/utils/addresses";
+import {
+  splitAddressList,
+  withoutOwnAddresses,
+  buildReferences,
+  replySubject,
+  forwardSubject,
+} from "@/utils/addresses";
 import {
   isAutoDraftEnabled,
   generateAutoDraft,
@@ -148,8 +154,7 @@ export function InlineReply({ thread, messages, accountId, noReply, onSent }: In
 
   const getSubject = useCallback((): string => {
     const sub = lastMessage?.subject ?? "";
-    if (mode === "forward") return sub.startsWith("Fwd:") ? sub : `Fwd: ${sub}`;
-    return sub.startsWith("Re:") ? sub : `Re: ${sub}`;
+    return mode === "forward" ? forwardSubject(sub) : replySubject(sub);
   }, [lastMessage, mode]);
 
   const handleSend = useCallback(async () => {
@@ -238,6 +243,11 @@ export function InlineReply({ thread, messages, accountId, noReply, onSent }: In
       bodyHtml,
       threadId: thread.id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
 
     // Reset inline state

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { buildReferences, replySubject, forwardSubject } from "@/utils/addresses";
 import { ContextMenu, type ContextMenuItem } from "./ContextMenu";
 import { useContextMenuStore } from "@/stores/contextMenuStore";
 import { useThreadStore } from "@/stores/threadStore";
@@ -262,10 +263,15 @@ function ThreadMenu({
     openComposer({
       mode: "reply",
       to: replyTo ? [replyTo] : [],
-      subject: `Re: ${lastMessage.subject ?? ""}`,
+      subject: replySubject(lastMessage.subject),
       bodyHtml: buildQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
   };
 
@@ -284,10 +290,15 @@ function ThreadMenu({
       mode: "replyAll",
       to: allRecipients,
       cc: ccList,
-      subject: `Re: ${lastMessage.subject ?? ""}`,
+      subject: replySubject(lastMessage.subject),
       bodyHtml: buildQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
   };
 
@@ -298,10 +309,15 @@ function ThreadMenu({
     openComposer({
       mode: "forward",
       to: [],
-      subject: `Fwd: ${lastMessage.subject ?? ""}`,
+      subject: forwardSubject(lastMessage.subject),
       bodyHtml: buildForwardQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
   };
 
@@ -632,7 +648,7 @@ function MessageMenu({
     openComposer({
       mode: "reply",
       to: replyAddr ? [replyAddr] : [],
-      subject: `Re: ${subject ?? ""}`,
+      subject: replySubject(subject),
       bodyHtml: buildQuote(msg),
       threadId,
       inReplyToMessageId: messageId,
@@ -641,20 +657,17 @@ function MessageMenu({
 
   const handleReplyAll = () => {
     const replyAddr = replyTo ?? fromAddress;
-    const allRecipients = new Set<string>();
-    if (replyAddr) allRecipients.add(replyAddr);
-    if (toAddresses) {
-      toAddresses.split(",").forEach((a) => allRecipients.add(a.trim()));
-    }
-    const ccList: string[] = [];
-    if (ccAddresses) {
-      ccAddresses.split(",").forEach((a) => ccList.push(a.trim()));
-    }
+    const own = [useAccountStore.getState().accounts.find((a) => a.id === accountId)?.email];
+    const allRecipients = withoutOwnAddresses(
+      [...(replyAddr ? [replyAddr] : []), ...splitAddressList(toAddresses)],
+      own,
+    );
+    const ccList = withoutOwnAddresses(splitAddressList(ccAddresses), own);
     openComposer({
       mode: "replyAll",
-      to: Array.from(allRecipients),
+      to: allRecipients,
       cc: ccList,
-      subject: `Re: ${subject ?? ""}`,
+      subject: replySubject(subject),
       bodyHtml: buildQuote(msg),
       threadId,
       inReplyToMessageId: messageId,
@@ -665,7 +678,7 @@ function MessageMenu({
     openComposer({
       mode: "forward",
       to: [],
-      subject: `Fwd: ${subject ?? ""}`,
+      subject: forwardSubject(subject),
       bodyHtml: buildForwardQuote(msg),
       threadId,
       inReplyToMessageId: messageId,

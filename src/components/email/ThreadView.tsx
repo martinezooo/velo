@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { buildReferences, replySubject, forwardSubject } from "@/utils/addresses";
 import { MessageItem } from "./MessageItem";
 import { ActionBar } from "./ActionBar";
 import { getMessagesForThread, type DbMessage } from "@/services/db/messages";
@@ -140,10 +141,15 @@ export function ThreadView({ thread }: ThreadViewProps) {
     openComposer({
       mode: "reply",
       to: replyTo ? [replyTo] : [],
-      subject: `Re: ${lastMessage.subject ?? ""}`,
+      subject: replySubject(lastMessage.subject),
       bodyHtml: buildQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
   }, [lastMessage, openComposer]);
 
@@ -163,10 +169,15 @@ export function ThreadView({ thread }: ThreadViewProps) {
       mode: "replyAll",
       to: Array.from(allRecipients),
       cc: ccList,
-      subject: `Re: ${lastMessage.subject ?? ""}`,
+      subject: replySubject(lastMessage.subject),
       bodyHtml: buildQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
   }, [lastMessage, openComposer]);
 
@@ -175,10 +186,15 @@ export function ThreadView({ thread }: ThreadViewProps) {
     openComposer({
       mode: "forward",
       to: [],
-      subject: `Fwd: ${lastMessage.subject ?? ""}`,
+      subject: forwardSubject(lastMessage.subject),
       bodyHtml: buildForwardQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      inReplyToHeader: lastMessage.message_id_header ?? null,
+      referencesHeader: buildReferences(
+        lastMessage.message_id_header,
+        lastMessage.references_header,
+      ),
     });
   }, [lastMessage, openComposer]);
 

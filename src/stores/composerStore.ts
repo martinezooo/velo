@@ -21,7 +21,12 @@ export interface ComposerState {
   subject: string;
   bodyHtml: string;
   threadId: string | null;
+  /** Provider message id — used for drafts and scheduling, not for headers. */
   inReplyToMessageId: string | null;
+  /** RFC 5322 Message-ID of the parent, for the In-Reply-To header. */
+  inReplyToHeader: string | null;
+  /** The parent's References chain plus the parent, for the References header. */
+  referencesHeader: string | null;
   showCcBcc: boolean;
   draftId: string | null;
   undoSendTimer: ReturnType<typeof setTimeout> | null;
@@ -43,6 +48,8 @@ export interface ComposerState {
     bodyHtml?: string;
     threadId?: string | null;
     inReplyToMessageId?: string | null;
+    inReplyToHeader?: string | null;
+    referencesHeader?: string | null;
     draftId?: string | null;
   }) => void;
   closeComposer: () => void;
@@ -76,6 +83,8 @@ export const useComposerStore = create<ComposerState>((set) => ({
   bodyHtml: "",
   threadId: null,
   inReplyToMessageId: null,
+  inReplyToHeader: null,
+  referencesHeader: null,
   showCcBcc: false,
   draftId: null,
   undoSendTimer: null,
@@ -99,6 +108,8 @@ export const useComposerStore = create<ComposerState>((set) => ({
       bodyHtml: opts?.bodyHtml ?? "",
       threadId: opts?.threadId ?? null,
       inReplyToMessageId: opts?.inReplyToMessageId ?? null,
+      inReplyToHeader: opts?.inReplyToHeader ?? null,
+      referencesHeader: opts?.referencesHeader ?? null,
       showCcBcc: (opts?.cc?.length ?? 0) > 0 || (opts?.bcc?.length ?? 0) > 0,
       draftId: opts?.draftId ?? null,
       viewMode: "modal",

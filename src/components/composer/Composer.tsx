@@ -243,14 +243,21 @@ export function Composer() {
 
     const html = getFullHtml();
     const senderEmail = state.fromEmail ?? activeAccount.email;
+    // Send with a display name unless an alias was picked, which already
+    // carries its own formatting
+    const fromHeader = !state.fromEmail && activeAccount.displayName
+      ? `${activeAccount.displayName} <${activeAccount.email}>`
+      : senderEmail;
     const raw = buildRawEmail({
-      from: senderEmail,
+      from: fromHeader,
       to: state.to,
       cc: state.cc.length > 0 ? state.cc : undefined,
       bcc: state.bcc.length > 0 ? state.bcc : undefined,
       subject: state.subject,
       htmlBody: html,
-      inReplyTo: state.inReplyToMessageId ?? undefined,
+      // The RFC Message-ID, never the provider's internal id
+      inReplyTo: state.inReplyToHeader ?? undefined,
+      references: state.referencesHeader ?? undefined,
       threadId: state.threadId ?? undefined,
       attachments: state.attachments.length > 0
         ? state.attachments.map((a) => ({

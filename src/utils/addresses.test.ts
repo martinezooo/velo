@@ -4,6 +4,8 @@ import {
   splitAddressList,
   withoutOwnAddresses,
   buildReferences,
+  replySubject,
+  forwardSubject,
 } from "./addresses";
 
 describe("extractAddress", () => {
@@ -83,5 +85,40 @@ describe("buildReferences", () => {
     // Better no header than a fabricated one: a wrong ID threads worse
     expect(buildReferences(null, "<a@mail>")).toBeNull();
     expect(buildReferences(undefined, undefined)).toBeNull();
+  });
+});
+
+describe("replySubject", () => {
+  it("adds Re: to a fresh subject", () => {
+    expect(replySubject("European Dynamics_Our Offer")).toBe("Re: European Dynamics_Our Offer");
+  });
+
+  it("does not stack a second Re:", () => {
+    // Replying to a reply used to produce "Re: Re: ..."
+    expect(replySubject("Re: Our Offer")).toBe("Re: Our Offer");
+    expect(replySubject("RE: Our Offer")).toBe("RE: Our Offer");
+    expect(replySubject("Re[2]: Our Offer")).toBe("Re[2]: Our Offer");
+  });
+
+  it("recognises the localised prefixes that reach this mailbox", () => {
+    expect(replySubject("Odp: Oferta")).toBe("Odp: Oferta");
+    expect(replySubject("AW: Angebot")).toBe("AW: Angebot");
+  });
+
+  it("handles a missing subject", () => {
+    expect(replySubject(null)).toBe("Re:");
+    expect(replySubject("   ")).toBe("Re:");
+  });
+});
+
+describe("forwardSubject", () => {
+  it("adds Fwd: once", () => {
+    expect(forwardSubject("Our Offer")).toBe("Fwd: Our Offer");
+    expect(forwardSubject("Fwd: Our Offer")).toBe("Fwd: Our Offer");
+    expect(forwardSubject("FW: Our Offer")).toBe("FW: Our Offer");
+  });
+
+  it("does not mistake a reply for a forward", () => {
+    expect(forwardSubject("Re: Our Offer")).toBe("Fwd: Re: Our Offer");
   });
 });

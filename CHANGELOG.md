@@ -28,6 +28,12 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
   `Message-ID` and `References` headers — it had columns for them and never
   filled them in — and replies use those, omitting the header entirely when the
   parent has none rather than inventing one.
+- Every reply path had the same two defects, not just the inline one: the
+  composer used by the context menu, smart replies and the pop-out window also
+  sent the provider's internal id as `In-Reply-To` and no display name.
+- Replying to a reply produced "Re: Re: …". Ten call sites prefixed the subject
+  without checking for one, and none recognised localised prefixes such as
+  `Odp:` or `AW:`.
 - Sent mail had no display name in `From`, and its text parts declared no
   `Content-Transfer-Encoding`, so a body with accented characters was labelled
   7-bit.

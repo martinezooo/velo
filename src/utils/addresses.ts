@@ -59,3 +59,25 @@ export function buildReferences(
   const chain = (parentReferences ?? "").trim();
   return chain ? `${chain} ${parentMessageId}` : parentMessageId;
 }
+
+/**
+ * Subject for a reply.
+ *
+ * Mail clients strip an existing `Re:` rather than stacking another, so
+ * "Re: Re: Re: Offer" is a client bug, not a convention. Matching is loose
+ * enough to catch the localised forms that reach a Polish mailbox.
+ */
+const REPLY_PREFIX = /^\s*(re|odp|aw|sv|ref)\s*(\[\d+\])?\s*:\s*/i;
+const FORWARD_PREFIX = /^\s*(fwd?|fw|wg|tr|pd)\s*:\s*/i;
+
+export function replySubject(subject: string | null | undefined): string {
+  const base = (subject ?? "").trim();
+  if (!base) return "Re:";
+  return REPLY_PREFIX.test(base) ? base : `Re: ${base}`;
+}
+
+export function forwardSubject(subject: string | null | undefined): string {
+  const base = (subject ?? "").trim();
+  if (!base) return "Fwd:";
+  return FORWARD_PREFIX.test(base) ? base : `Fwd: ${base}`;
+}
