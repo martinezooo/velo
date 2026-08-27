@@ -48,14 +48,19 @@ function buildAlternativePart(boundary: string, htmlBody: string): string[] {
   const textContent = htmlToPlainText(htmlBody);
   const lines: string[] = [];
 
+  // Without an explicit encoding a part defaults to 7bit, which is a lie for
+  // any body carrying accented characters or typographic quotes — a strict
+  // relay is entitled to mangle it.
   lines.push(`--${boundary}`);
   lines.push("Content-Type: text/plain; charset=UTF-8");
+  lines.push("Content-Transfer-Encoding: 8bit");
   lines.push("");
   lines.push(textContent);
   lines.push("");
 
   lines.push(`--${boundary}`);
   lines.push("Content-Type: text/html; charset=UTF-8");
+  lines.push("Content-Transfer-Encoding: 8bit");
   lines.push("");
   lines.push(htmlBody);
   lines.push("");

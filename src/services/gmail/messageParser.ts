@@ -34,6 +34,10 @@ export interface ParsedMessage {
   listUnsubscribe: string | null;
   listUnsubscribePost: string | null;
   authResults: string | null;
+  /** RFC 5322 Message-ID. Required to thread a reply anywhere but Gmail. */
+  messageIdHeader?: string | null;
+  referencesHeader?: string | null;
+  inReplyToHeader?: string | null;
 }
 
 export function parseGmailMessage(msg: GmailMessage): ParsedMessage {
@@ -70,6 +74,9 @@ export function parseGmailMessage(msg: GmailMessage): ParsedMessage {
     listUnsubscribe: getHeader(headers, "List-Unsubscribe"),
     listUnsubscribePost: getHeader(headers, "List-Unsubscribe-Post"),
     authResults: authResult ? JSON.stringify(authResult) : null,
+    messageIdHeader: getHeader(headers, "Message-ID") ?? getHeader(headers, "Message-Id"),
+    referencesHeader: getHeader(headers, "References"),
+    inReplyToHeader: getHeader(headers, "In-Reply-To"),
   };
 }
 

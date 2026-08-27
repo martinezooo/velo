@@ -19,6 +19,18 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
   thread each time.
 
 ### Fixed
+- Reply All addressed the reply back to you. The code tried to drop your own
+  address, but compared `you@host` against the header's `You <you@host>`, so the
+  exact match never fired and you stayed on the To line.
+- Replies carried `In-Reply-To: <Gmail's internal id>` and no `References` at
+  all. Neither means anything outside Gmail, so replies did not thread in
+  Outlook, Thunderbird or Apple Mail. The Gmail sync now stores the real
+  `Message-ID` and `References` headers — it had columns for them and never
+  filled them in — and replies use those, omitting the header entirely when the
+  parent has none rather than inventing one.
+- Sent mail had no display name in `From`, and its text parts declared no
+  `Content-Transfer-Encoding`, so a body with accented characters was labelled
+  7-bit.
 - "Generating draft…" could spin forever. Nothing bounded a model call, and the
   auto-draft check sent a real completion to the provider every time a reply
   box opened, just to ask whether AI was configured.

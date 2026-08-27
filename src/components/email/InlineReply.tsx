@@ -11,6 +11,7 @@ import { buildRawEmail } from "@/utils/emailBuilder";
 import { upsertContact, recordContactUse } from "@/services/db/contacts";
 import { getSetting } from "@/services/db/settings";
 import { getDefaultSignature } from "@/services/db/signatures";
+import { splitAddressList, withoutOwnAddresses, buildReferences } from "@/utils/addresses";
 import {
   isAutoDraftEnabled,
   generateAutoDraft,
@@ -133,24 +134,16 @@ export function InlineReply({ thread, messages, accountId, noReply, onSent }: In
       return { to: replyTo ? [replyTo] : [], cc: [] };
     }
 
-    // replyAll
-    const allTo = new Set<string>();
-    if (replyTo) allTo.add(replyTo);
-    if (lastMessage.to_addresses) {
-      lastMessage.to_addresses.split(",").forEach((a) => allTo.add(a.trim()));
-    }
-    // Remove self from recipients
-    if (activeAccount?.email) allTo.delete(activeAccount.email);
+    // replyAll — everyone on the original except the reader themselves.
+    // Compare on the address, since the header carries display names.
+    const own = [activeAccount?.email];
+    const to = withoutOwnAddresses(
+      [...(replyTo ? [replyTo] : []), ...splitAddressList(lastMessage.to_addresses)],
+      own,
+    );
+    const cc = withoutOwnAddresses(splitAddressList(lastMessage.cc_addresses), own);
 
-    const ccList: string[] = [];
-    if (lastMessage.cc_addresses) {
-      lastMessage.cc_addresses.split(",").forEach((a) => {
-        const trimmed = a.trim();
-        if (trimmed && trimmed !== activeAccount?.email) ccList.push(trimmed);
-      });
-    }
-
-    return { to: Array.from(allTo), cc: ccList };
+    return { to, cc };
   }, [lastMessage, mode, activeAccount?.email]);
 
   const getSubject = useCallback((): string => {
@@ -172,12 +165,22 @@ export function InlineReply({ thread, messages, accountId, noReply, onSent }: In
       }
 
       const raw = buildRawEmail({
-        from: activeAccount.email,
+        // Include the display name, so the recipient sees a person rather
+        // than a bare address
+        from: activeAccount.displayName
+          ? `${activeAccount.displayName} <${activeAccount.email}>`
+          : activeAccount.email,
         to,
         cc: cc.length > 0 ? cc : undefined,
         subject: getSubject(),
         htmlBody: html,
-        inReplyTo: lastMessage?.id,
+        // The RFC Message-ID, not Gmail's internal id: the latter means
+        // nothing to any other mail client and breaks threading for them.
+        inReplyTo: lastMessage?.message_id_header ?? undefined,
+        references: buildReferences(
+          lastMessage?.message_id_header,
+          lastMessage?.references_header,
+        ) ?? undefined,
         threadId: thread.id,
       });
 

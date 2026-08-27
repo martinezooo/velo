@@ -4,6 +4,7 @@ import { useContextMenuStore } from "@/stores/contextMenuStore";
 import { useThreadStore } from "@/stores/threadStore";
 import { useAccountStore } from "@/stores/accountStore";
 import { parseThreadKey, threadKeyOf, groupKeysByAccount } from "@/utils/threadKey";
+import { splitAddressList, withoutOwnAddresses } from "@/utils/addresses";
 import { getActiveLabel } from "@/router/navigate";
 import { useComposerStore } from "@/stores/composerStore";
 import { useLabelStore } from "@/stores/labelStore";
@@ -273,18 +274,15 @@ function ThreadMenu({
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
     const replyTo = lastMessage.reply_to ?? lastMessage.from_address;
-    const allRecipients = new Set<string>();
-    if (replyTo) allRecipients.add(replyTo);
-    if (lastMessage.to_addresses) {
-      lastMessage.to_addresses.split(",").forEach((a) => allRecipients.add(a.trim()));
-    }
-    const ccList: string[] = [];
-    if (lastMessage.cc_addresses) {
-      lastMessage.cc_addresses.split(",").forEach((a) => ccList.push(a.trim()));
-    }
+    const own = [useAccountStore.getState().accounts.find((a) => a.id === accountId)?.email];
+    const allRecipients = withoutOwnAddresses(
+      [...(replyTo ? [replyTo] : []), ...splitAddressList(lastMessage.to_addresses)],
+      own,
+    );
+    const ccList = withoutOwnAddresses(splitAddressList(lastMessage.cc_addresses), own);
     openComposer({
       mode: "replyAll",
-      to: Array.from(allRecipients),
+      to: allRecipients,
       cc: ccList,
       subject: `Re: ${lastMessage.subject ?? ""}`,
       bodyHtml: buildQuote(lastMessage),
