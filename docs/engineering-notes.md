@@ -1,6 +1,6 @@
-# CLAUDE.md
+# Engineering notes
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Conventions and hard-won gotchas for anyone working in this codebase.
 
 ## Commands
 

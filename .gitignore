@@ -48,8 +48,7 @@ nul
 .settings/
 
 # Claude Code — ignore local settings but track shared skills
-.claude/*
-!.claude/skills/
+.claude/
 
 # Debug files
 debug-*.mjs

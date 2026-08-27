@@ -118,7 +118,7 @@ velo/
 │   └── icons/                # App icons (all platforms)
 ├── docs/                     # Documentation
 ├── package.json
-├── CLAUDE.md                 # AI coding assistant context
+├── engineering-notes.md                 # Conventions and gotchas
 └── README.md
 ```
 
