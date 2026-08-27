@@ -194,7 +194,7 @@ export default function App() {
     };
   }, []);
 
-  // Contact photos from Google, and the in-memory cache the list reads from
+  // In-memory cache of stored contact avatars, which the thread list reads
   useEffect(() => {
     const refreshCache = () => {
       import("./services/contacts/avatarCache")
@@ -203,23 +203,8 @@ export default function App() {
     };
     refreshCache();
 
-    const syncPhotos = () => {
-      const google = useAccountStore.getState().accounts
-        .filter((a) => a.provider !== "imap" && a.provider !== "caldav");
-      if (google.length === 0) return;
-      import("./services/contacts/googleContacts")
-        .then(async ({ syncGoogleContactPhotos }) => {
-          for (const account of google) {
-            await syncGoogleContactPhotos(account.id);
-          }
-        })
-        .catch(() => {});
-    };
-    // After mail sync, so the contact book exists before photos are attached
-    window.addEventListener("velo-sync-done", syncPhotos);
     window.addEventListener("velo-contact-photos-updated", refreshCache);
     return () => {
-      window.removeEventListener("velo-sync-done", syncPhotos);
       window.removeEventListener("velo-contact-photos-updated", refreshCache);
     };
   }, []);

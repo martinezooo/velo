@@ -14,10 +14,6 @@
 </p>
 
 <p align="center">
-  <strong>A fork of <a href="https://github.com/avihaymenahem/velo">Velo</a> — see <a href="FORK.md">what this fork changes</a>.</strong>
-</p>
-
-<p align="center">
   <a href="#features">Features</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#installation">Installation</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="docs/keyboard-shortcuts.md">Shortcuts</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
@@ -25,6 +21,31 @@
   <a href="docs/development.md">Development</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
+
+---
+
+## A fork of Velo
+
+Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21. Velo
+shows one account at a time; the reason this fork exists is **All inboxes** —
+every account's mail in one list, with the mailbox it came from on each row.
+
+That turned out to need more than a wider query. Thread IDs are unique only
+within an account: the database key is `(account_id, id)`, and IMAP thread IDs
+hash the root `Message-ID`, so one message delivered to two accounts produces
+the same ID in both. Every lookup on the client had to key on account and
+thread together, or selecting one thread could act on another account's.
+
+The rest followed from actually living in it with four mailboxes: settings that
+say which address a signature belongs to, sender avatars that work for the
+companies who actually write to you, a contact book built from real mail, a
+warning before you send to an address you only know from another mailbox, and a
+pile of fixes — requests with no timeout that hung forever, retired Gemini
+model IDs reported as "connection error", HTML entities in previews, a sidebar
+that overlapped the thread.
+
+[CHANGELOG.md](CHANGELOG.md) has the full list. Bundle identifier is unchanged,
+so an existing Velo install keeps its mail and settings.
 
 ---
 

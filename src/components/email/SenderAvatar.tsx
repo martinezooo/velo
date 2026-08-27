@@ -59,9 +59,9 @@ export const SenderAvatar = memo(function SenderAvatar({
 
   const initial = (name?.[0] ?? address?.[0] ?? "?").toUpperCase();
 
-  // Sources in order of how well they identify the person: the photo Google
-  // already has for them, then a Gravatar, then their organisation's icon,
-  // then initials. Each failure advances the stage.
+  // Sources in order of how well they identify the sender: a cached avatar,
+  // then a Gravatar, then their organisation's icon, then initials. Each
+  // failure advances the stage.
   const sources = useMemo(() => {
     if (!address || !showAvatars) return [] as string[];
     return [
