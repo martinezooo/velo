@@ -35,6 +35,16 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
   `Message-ID` and `References` headers — it had columns for them and never
   filled them in — and replies use those, omitting the header entirely when the
   parent has none rather than inventing one.
+- Non-ASCII headers went out raw. A Polish subject, an accented display name
+  and a filename like `Umowa ąę.pdf` were written straight into headers that
+  RFC 5322 requires to be ASCII. Gmail tolerated it; a strict relay need not.
+  All three are now encoded (RFC 2047, and RFC 2231 for filenames).
+- Adding a display name to `From` broke the generated `Message-ID`: the domain
+  was taken by splitting on `@`, which on `Name <a@b>` captured the closing
+  bracket and produced `<…@b>>`.
+- Nothing checked attachment size, so an oversized message was written in full
+  and then rejected by the provider. The composer now says how far over the
+  limit it is and refuses to send.
 - Every reply path had the same two defects, not just the inline one: the
   composer used by the context menu, smart replies and the pop-out window also
   sent the provider's internal id as `In-Reply-To` and no display name.

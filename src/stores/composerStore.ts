@@ -3,6 +3,13 @@ import { create } from "zustand";
 export type ComposerMode = "new" | "reply" | "replyAll" | "forward";
 export type ComposerViewMode = "modal" | "fullpage";
 
+/**
+ * What a provider will accept in one message. Gmail rejects a raw message over
+ * ~35 MB, and base64 inflates a file by a third, so the usable payload is
+ * roughly 25 MB — the figure every mail client quotes.
+ */
+export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+
 export interface ComposerAttachment {
   id: string;
   file: File;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ForwardAttachmentsPrompt } from "./ForwardAttachmentsPrompt";
+import { formatFileSize } from "@/utils/fileTypeHelpers";
 import { CSSTransition } from "react-transition-group";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -16,7 +17,7 @@ import { ScheduleSendDialog } from "./ScheduleSendDialog";
 import { SignatureSelector } from "./SignatureSelector";
 import { TemplatePicker } from "./TemplatePicker";
 import { FromSelector } from "./FromSelector";
-import { useComposerStore } from "@/stores/composerStore";
+import { useComposerStore, MAX_ATTACHMENT_BYTES } from "@/stores/composerStore";
 import { useAccountStore } from "@/stores/accountStore";
 import { useUIStore } from "@/stores/uiStore";
 import { sendEmail, archiveThread, deleteDraft as deleteDraftAction } from "@/services/emailActions";
@@ -59,6 +60,9 @@ export function Composer() {
   const setViewMode = useComposerStore((s) => s.setViewMode);
   const addAttachment = useComposerStore((s) => s.addAttachment);
   const forwardSourceMessageId = useComposerStore((s) => s.forwardSourceMessageId);
+  const attachments = useComposerStore((s) => s.attachments);
+  const attachmentBytes = attachments.reduce((sum, a) => sum + a.size, 0);
+  const attachmentsTooLarge = attachmentBytes > MAX_ATTACHMENT_BYTES;
 
   const activeAccountId = useAccountStore((s) => s.activeAccountId);
   const accounts = useAccountStore((s) => s.accounts);
@@ -239,6 +243,9 @@ export function Composer() {
     if (!activeAccountId || !activeAccount || sendingRef.current) return;
     const state = useComposerStore.getState();
     if (state.to.length === 0) return;
+    // Refuse locally rather than letting the provider reject the whole send
+    // after the message has been written
+    if (state.attachments.reduce((sum, a) => sum + a.size, 0) > MAX_ATTACHMENT_BYTES) return;
 
     sendingRef.current = true;
     stopAutoSave();
@@ -591,10 +598,16 @@ export function Composer() {
             >
               Discard
             </Button>
+            {attachmentsTooLarge && (
+              <span className="mr-3 text-xs text-danger">
+                Attachments are {formatFileSize(attachmentBytes)} — over the{" "}
+                {formatFileSize(MAX_ATTACHMENT_BYTES)} limit
+              </span>
+            )}
             <div className="flex items-center">
               <button
                 onClick={handleSend}
-                disabled={to.length === 0}
+                disabled={to.length === 0 || attachmentsTooLarge}
                 className="px-4 py-1.5 text-xs font-medium text-white bg-accent hover:bg-accent-hover rounded-l-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Send
