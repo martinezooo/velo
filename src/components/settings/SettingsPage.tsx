@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { SignatureEditor } from "./SignatureEditor";
 import { SettingsAccountPicker } from "./SettingsAccountPicker";
+import { useAccountHealthStore } from "@/stores/accountHealthStore";
 import { TemplateEditor } from "./TemplateEditor";
 import { FilterEditor } from "./FilterEditor";
 import { LabelEditor } from "./LabelEditor";
@@ -146,6 +147,8 @@ export function SettingsPage() {
   const [resyncStatus, setResyncStatus] = useState<Record<string, "idle" | "syncing" | "done" | "error">>({});
   const [showMailboxUsage, setShowMailboxUsage] = useState(false);
   const [summaryLanguage, setSummaryLanguage] = useState("auto");
+  const needsReauth = useAccountHealthStore((s) => s.needsReauth);
+  const clearNeedsReauth = useAccountHealthStore((s) => s.clearNeedsReauth);
   const [mailboxUsage, setMailboxUsage] = useState<Map<string, MailboxUsage>>(() => new Map());
   const [autoArchiveCategories, setAutoArchiveCategories] = useState<Set<string>>(() => new Set());
   const [smartNotifications, setSmartNotifications] = useState(true);
@@ -337,6 +340,7 @@ export function SettingsPage() {
       try {
         await reauthorizeAccount(accountId, email);
         setReauthStatus((prev) => ({ ...prev, [accountId]: "done" }));
+        clearNeedsReauth(accountId);
         setTimeout(() => {
           setReauthStatus((prev) => ({ ...prev, [accountId]: "idle" }));
         }, 3000);
@@ -348,7 +352,7 @@ export function SettingsPage() {
         }, 3000);
       }
     },
-    [],
+    [clearNeedsReauth],
   );
 
   const handleResyncAccount = useCallback(
@@ -907,6 +911,12 @@ export function SettingsPage() {
                                 <div className="text-xs text-text-tertiary">
                                   {account.email}
                                 </div>
+                                {needsReauth.has(account.id) && (
+                                  <div className="mt-0.5 text-xs text-warning">
+                                    Sign-in expired — this account is not syncing.
+                                    Use Re-authorize.
+                                  </div>
+                                )}
                                 {showMailboxUsage && mailboxUsage.get(account.id) && (
                                   <div className="mt-0.5 text-xs text-text-tertiary">
                                     {formatFileSize(mailboxUsage.get(account.id)!.totalBytes)}
@@ -1074,10 +1084,16 @@ export function SettingsPage() {
                         <option value="90">Last 90 days</option>
                         <option value="180">Last 180 days</option>
                         <option value="365">Last 1 year</option>
+                        <option value="730">Last 2 years</option>
+                        <option value="1825">Last 5 years</option>
+                        <option value="0">Everything</option>
                       </select>
                     </SettingRow>
                     <p className="text-xs text-text-tertiary">
-                      Changes apply on the next full resync.
+                      Only threads with activity inside this window are fetched, so
+                      older conversations stay missing until it is widened. Changing
+                      it affects the next full resync — use Resync on an account in
+                      Accounts to apply it now.
                     </p>
                   </Section>
 

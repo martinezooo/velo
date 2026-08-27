@@ -188,10 +188,14 @@ export async function initialSync(
   await syncLabels(client, accountId);
   onProgress?.({ phase: "labels", current: 1, total: 1 });
 
-  // Phase 2: Fetch thread list
-  const afterDate = new Date();
-  afterDate.setDate(afterDate.getDate() - daysBack);
-  const afterStr = `${afterDate.getFullYear()}/${afterDate.getMonth() + 1}/${afterDate.getDate()}`;
+  // Phase 2: Fetch thread list.
+  // daysBack of 0 means the entire mailbox, so no date filter is applied.
+  let query: string | undefined;
+  if (daysBack > 0) {
+    const afterDate = new Date();
+    afterDate.setDate(afterDate.getDate() - daysBack);
+    query = `after:${afterDate.getFullYear()}/${afterDate.getMonth() + 1}/${afterDate.getDate()}`;
+  }
 
   const threadStubs: { id: string }[] = [];
   let pageToken: string | undefined;
@@ -202,7 +206,7 @@ export async function initialSync(
     const response = await client.listThreads({
       maxResults: 100,
       pageToken,
-      q: `after:${afterStr}`,
+      q: query,
     });
 
     if (response.threads) {

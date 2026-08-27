@@ -72,7 +72,8 @@ import { MoveToFolderDialog } from "./components/email/MoveToFolderDialog";
 import { OfflineBanner } from "./components/ui/OfflineBanner";
 import { UpdateToast } from "./components/ui/UpdateToast";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
-import { formatSyncError } from "./utils/networkErrors";
+import { formatSyncError, classifyError } from "./utils/networkErrors";
+import { useAccountHealthStore } from "./stores/accountHealthStore";
 import { getThemeById, COLOR_THEMES } from "./constants/themes";
 import type { ColorThemeId } from "./constants/themes";
 import { router } from "./router";
@@ -299,6 +300,8 @@ export default function App() {
           ui.setMarkAsReadBehavior(savedMarkRead);
         }
 
+        useAccountHealthStore.getState().restore();
+
         // Restore the last sync time so the sidebar is accurate before the
         // first sync of this session finishes
         const savedLastSync = await getSetting("last_sync_at");
@@ -482,6 +485,7 @@ export default function App() {
       } else if (status === "done") {
         setSyncStatus("Sync complete");
         setTimeout(() => setSyncStatus(null), 2_000);
+        useAccountHealthStore.getState().clearNeedsReauth(accountId);
         useUIStore.getState().setLastSyncAt(Date.now());
         useUIStore.getState().setSyncing(false);
         window.dispatchEvent(new Event("velo-sync-done"));
@@ -495,6 +499,11 @@ export default function App() {
             .catch((err) => console.error("Backfill error:", err));
         }
       } else if (status === "error") {
+        // An expired grant never recovers on its own, so it is remembered
+        // rather than left to a toast that clears in eight seconds.
+        if (error && classifyError(error).type === "auth") {
+          useAccountHealthStore.getState().markNeedsReauth(accountId);
+        }
         setSyncStatus(error ? `Sync failed: ${formatSyncError(error)}` : "Sync failed");
         useUIStore.getState().setSyncing(false);
         // Still dispatch sync-done so the UI refreshes with any partially stored data

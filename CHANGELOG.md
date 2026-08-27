@@ -14,6 +14,14 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
   follow the language of the message being answered.
 
 ### Changed
+- The sync window can now go past a year: two years, five years, or everything.
+  It was capped at one year with no way to widen it, and only threads with
+  activity inside the window are fetched — which is why most of a mailbox could
+  be missing with nothing saying so.
+- An account whose sign-in has expired says so in Settings › Accounts until it
+  is re-authorised. Sync failures were only ever a toast that cleared after
+  eight seconds, so a dead grant left an account showing an empty mailbox with
+  no explanation.
 - Forwarding asks whether to bring the original's attachments along, and only
   downloads them once you say yes. It used to drop them silently, which loses
   the document the message was about; attaching them unasked is the other wrong

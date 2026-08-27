@@ -54,7 +54,9 @@ async function syncGmailAccount(accountId: string): Promise<void> {
   }
 
   const syncPeriodStr = await getSetting("sync_period_days");
-  const syncDays = parseInt(syncPeriodStr ?? "365", 10) || 365;
+  // 0 means the whole mailbox: parseInt("0") is falsy, so it needs its own check
+  const parsedDays = parseInt(syncPeriodStr ?? "365", 10);
+  const syncDays = Number.isFinite(parsedDays) ? parsedDays : 365;
 
   if (account.history_id) {
     // Delta sync
@@ -95,7 +97,9 @@ async function syncImapAccount(accountId: string): Promise<void> {
   }
 
   const syncPeriodStr = await getSetting("sync_period_days");
-  const syncDays = parseInt(syncPeriodStr ?? "365", 10) || 365;
+  // 0 means the whole mailbox: parseInt("0") is falsy, so it needs its own check
+  const parsedDays = parseInt(syncPeriodStr ?? "365", 10);
+  const syncDays = Number.isFinite(parsedDays) ? parsedDays : 365;
 
   if (account.history_id) {
     // Delta sync — IMAP uses folder-level UID tracking
