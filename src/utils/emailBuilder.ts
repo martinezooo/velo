@@ -7,6 +7,7 @@ import {
   encodeAddressList,
   encodeFilenameParams,
   addressOnly,
+  stripHeaderBreaks,
 } from "./mimeHeaders";
 
 export interface EmailAttachment {
@@ -132,11 +133,13 @@ export function buildRawEmail(draft: EmailDraft): string {
   lines.push(`Subject: ${encodeHeaderValue(draft.subject)}`);
   lines.push(`MIME-Version: 1.0`);
 
+  // These come from a stored header of an incoming message, so they are
+  // attacker-influenced and get the same treatment as anything else.
   if (draft.inReplyTo) {
-    lines.push(`In-Reply-To: ${draft.inReplyTo}`);
+    lines.push(`In-Reply-To: ${stripHeaderBreaks(draft.inReplyTo)}`);
   }
   if (draft.references) {
-    lines.push(`References: ${draft.references}`);
+    lines.push(`References: ${stripHeaderBreaks(draft.references)}`);
   }
 
   const { html: processedHtml, images: inlineImages } = extractInlineImages(draft.htmlBody);

@@ -7,6 +7,20 @@
  * therefore encoded, and anything already ASCII is left exactly as it was.
  */
 
+/**
+ * Remove anything that could end the current header and begin another.
+ *
+ * A CR or LF in a header value is a header-injection primitive: a subject of
+ * "Hi\r\nBcc: attacker@example.com" adds a real Bcc, silently copying the
+ * message. Values reach here from mail the user did not write — a reply takes
+ * its subject from the incoming message — so this cannot be left to callers.
+ */
+export function stripHeaderBreaks(value: string): string {
+  // Fold whitespace is legal *inside* a header, but only the encoder may add
+  // it; incoming values are flattened to spaces.
+  return value.replace(/[\r\n\u2028\u2029\u0000]+/g, " ").trim();
+}
+
 /** True when the value can go into a header untouched. */
 function isAscii(value: string): boolean {
   // eslint-disable-next-line no-control-regex
@@ -26,7 +40,9 @@ function base64Utf8(value: string): string {
  * decodes to mojibake.
  */
 export function encodeHeaderValue(value: string): string {
-  if (!value || isAscii(value)) return value;
+  const safe = stripHeaderBreaks(value ?? "");
+  if (!safe) return "";
+  if (isAscii(safe)) return safe;
 
   const prefix = "=?UTF-8?B?";
   const suffix = "?=";
@@ -37,7 +53,7 @@ export function encodeHeaderValue(value: string): string {
   const words: string[] = [];
   let current = "";
   let currentBytes = 0;
-  for (const char of value) {
+  for (const char of safe) {
     const size = new TextEncoder().encode(char).length;
     if (currentBytes + size > maxBytes) {
       words.push(`${prefix}${base64Utf8(current)}${suffix}`);
@@ -57,7 +73,8 @@ export function encodeHeaderValue(value: string): string {
  * Encode the display name of an address, leaving the address itself alone —
  * `<user@host>` must stay literal for the message to be deliverable.
  */
-export function encodeAddressHeader(value: string): string {
+export function encodeAddressHeader(rawValue: string): string {
+  const value = stripHeaderBreaks(rawValue ?? "");
   const match = value.match(/^(.*?)\s*<([^>]+)>\s*$/);
   if (!match) return value;
 
@@ -89,7 +106,7 @@ export function encodeFilenameParams(filename: string): {
   nameParam: string;
   dispositionParam: string;
 } {
-  const safe = filename.replace(/["\\\r\n]/g, "_");
+  const safe = stripHeaderBreaks(filename).replace(/["\\]/g, "_");
   if (isAscii(safe)) {
     return {
       nameParam: `name="${safe}"`,

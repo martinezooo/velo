@@ -31,11 +31,12 @@ describe("encodeHeaderValue", () => {
   });
 
   it("keeps every encoded word within the 75-character limit", () => {
-    const long = "zażółć gęślą jaźń ".repeat(12);
+    const long = "zażółć gęślą jaźń ".repeat(12).trim();
     const encoded = encodeHeaderValue(long);
     for (const word of encoded.split(/\r\n /)) {
       expect(word.length).toBeLessThanOrEqual(75);
     }
+    // Surrounding whitespace is not meaningful in a header and is trimmed
     expect(decodeWords(encoded)).toBe(long);
   });
 

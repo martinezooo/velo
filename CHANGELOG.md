@@ -38,7 +38,21 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
   incrementally as mail arrives, instead of being rewritten from the whole
   thread each time.
 
+### Security
+- **Header injection.** A CR or LF in a subject or a recipient started a new
+  header instead of staying inside the value, so a crafted subject arriving in
+  mail became a hidden `Bcc:` the moment the reader hit Reply. Every header
+  value is now flattened before it is emitted, including `In-Reply-To` and
+  `References`, which are copied from mail the user did not write.
+- Quoting an incoming message put its HTML into the draft unsanitised and its
+  sender name unescaped. Both go through the sanitiser now.
+
 ### Fixed
+- Replying to a message with inline images carried `cid:` references the reply
+  does not contain, so the recipient saw broken images; `data:` images were
+  worse, being re-encoded into every reply and dragged along each round of a
+  thread. Unresolvable images are replaced by a short marker. Remote images are
+  left alone, since they cost the reply nothing.
 - Reply All addressed the reply back to you. The code tried to drop your own
   address, but compared `you@host` against the header's `You <you@host>`, so the
   exact match never fired and you stayed on the To line.
