@@ -31,6 +31,12 @@ const AUTH_PATTERNS = [
   "invalid credentials",
   "login denied",
   "authenticate failed",
+  // OAuth: the refresh token itself has been revoked or has expired, which no
+  // amount of retrying fixes — only signing in again does
+  "invalid_grant",
+  "invalid_token",
+  "invalid authentication credentials",
+  "token has been expired or revoked",
 ];
 
 export function classifyError(error: unknown): ClassifiedError {

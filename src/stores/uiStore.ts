@@ -16,6 +16,15 @@ export type MarkAsReadBehavior = "instant" | "2s" | "manual";
  */
 export type EmailBodyTheme = "light" | "dim" | "dark";
 
+/** How the thread list is ordered. Pinned threads stay on top regardless. */
+export type EmailSort =
+  | "newest"
+  | "oldest"
+  | "unread"
+  | "sender"
+  | "subject"
+  | "attachments";
+
 export const EMAIL_BODY_THEMES: EmailBodyTheme[] = ["light", "dim", "dark"];
 export type FontScale = "small" | "default" | "large" | "xlarge";
 export type InboxViewMode = "unified" | "split";
@@ -38,6 +47,7 @@ interface UIState {
   /** How message bodies are rendered. HTML mail is authored for white
    *  backgrounds, so it stays light unless the reader forces dark. */
   emailBodyTheme: EmailBodyTheme;
+  emailSort: EmailSort;
   /** Fetch sender avatars from Gravatar. Off means initials only, and no
    *  request leaves the machine for them. */
   showSenderAvatars: boolean;
@@ -72,6 +82,7 @@ interface UIState {
   setDefaultReplyMode: (mode: DefaultReplyMode) => void;
   setMarkAsReadBehavior: (behavior: MarkAsReadBehavior) => void;
   setEmailBodyTheme: (theme: EmailBodyTheme) => void;
+  setEmailSort: (sort: EmailSort) => void;
   setShowSenderAvatars: (enabled: boolean) => void;
   toggleEmailBodyTheme: () => void;
   setFontScale: (scale: FontScale) => void;
@@ -103,6 +114,7 @@ export const useUIStore = create<UIState>((set) => ({
   defaultReplyMode: "reply",
   markAsReadBehavior: "instant",
   emailBodyTheme: "light",
+  emailSort: "newest",
   showSenderAvatars: true,
   fontScale: "default",
   colorTheme: "sage",
@@ -156,6 +168,10 @@ export const useUIStore = create<UIState>((set) => ({
   setShowSenderAvatars: (showSenderAvatars) => {
     setSetting("show_sender_avatars", showSenderAvatars ? "true" : "false").catch(() => {});
     set({ showSenderAvatars });
+  },
+  setEmailSort: (emailSort) => {
+    setSetting("email_sort", emailSort).catch(() => {});
+    set({ emailSort });
   },
   setEmailBodyTheme: (emailBodyTheme) => {
     setSetting("email_body_theme", emailBodyTheme).catch(() => {});

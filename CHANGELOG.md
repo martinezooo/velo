@@ -9,6 +9,11 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
 ## [Unreleased]
 
 ### Added
+- Sorting for the conversation list: newest, oldest, unread first, sender,
+  subject or attachments. Pinned threads stay on top under every ordering, and
+  a subject sort files "Re: Offer" under Offer rather than under R.
+- A disconnected mailbox says so above its own mail, with a Reconnect button
+  that re-authorises in place.
 - Summary language, in Settings › AI. Summaries are read by one person and can
   sit in their own language whatever the mail is written in; replies always
   follow the language of the message being answered.

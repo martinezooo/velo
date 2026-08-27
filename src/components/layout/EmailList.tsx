@@ -2,6 +2,8 @@ import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { CSSTransition } from "react-transition-group";
 import { ThreadCard } from "../email/ThreadCard";
 import { CategoryTabs } from "../email/CategoryTabs";
+import { DisconnectedAccountsBanner } from "./DisconnectedAccountsBanner";
+import { sortThreads } from "@/utils/sortThreads";
 import { SearchBar } from "../search/SearchBar";
 import { EmailListSkeleton } from "../ui/Skeleton";
 import { useThreadStore, type Thread } from "@/stores/threadStore";
@@ -89,6 +91,8 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
   const selectedThreadKey = useSelectedThreadKey(activeAccountId);
   const activeLabel = useActiveLabel();
   const readFilter = useUIStore((s) => s.readFilter);
+  const emailSort = useUIStore((s) => s.emailSort);
+  const setEmailSort = useUIStore((s) => s.setEmailSort);
   const setReadFilter = useUIStore((s) => s.setReadFilter);
   const readingPanePosition = useUIStore((s) => s.readingPanePosition);
   const userLabels = useLabelStore((s) => s.labels);
@@ -271,8 +275,10 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
     if (readFilter === "unread") filtered = filtered.filter((t) => !t.isRead);
     else if (readFilter === "read") filtered = filtered.filter((t) => t.isRead);
     // Category filtering is now server-side (Phase 4) — no client-side filter needed
-    return filtered;
-  }, [threads, readFilter, searchThreadIds]);
+    // Ordering happens last: the SQL already returns newest-first, and any
+    // other choice has to apply to the whole filtered set, not each page.
+    return sortThreads(filtered, emailSort);
+  }, [threads, readFilter, searchThreadIds, emailSort]);
 
   // Pre-compute bundled category Set for O(1) lookups in filter
   const bundledCategorySet = useMemo(
@@ -626,6 +632,9 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
       }`}
       style={!expanded && readingPanePosition === "right" && width ? { width } : undefined}
     >
+      {/* A disconnected mailbox is stated where its mail should be */}
+      <DisconnectedAccountsBanner />
+
       {/* Header — one line: what you are looking at, how much of it, and the
           read filter. The count sits inline rather than on a second row. */}
       <div className="px-4 py-2 border-b border-border-primary flex items-center gap-2">
@@ -647,9 +656,25 @@ export function EmailList({ width, listRef, expanded = false }: { width?: number
           {filteredThreads.length}
         </span>
         <select
+          value={emailSort}
+          onChange={(e) => setEmailSort(e.target.value as typeof emailSort)}
+          title="Sort conversations"
+          aria-label="Sort conversations"
+          className="ml-auto shrink-0 text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded border border-border-primary"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="unread">Unread first</option>
+          <option value="sender">Sender</option>
+          <option value="subject">Subject</option>
+          <option value="attachments">With attachments</option>
+        </select>
+        <select
           value={readFilter}
           onChange={(e) => setReadFilter(e.target.value as "all" | "read" | "unread")}
-          className="ml-auto shrink-0 text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded border border-border-primary"
+          title="Filter by read state"
+          aria-label="Filter by read state"
+          className="shrink-0 text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded border border-border-primary"
         >
           <option value="all">All</option>
           <option value="unread">Unread</option>

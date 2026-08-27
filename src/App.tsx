@@ -321,6 +321,12 @@ export default function App() {
           ui.setShowSenderAvatars(false);
         }
 
+        // Restore list ordering
+        const savedSort = await getSetting("email_sort");
+        if (savedSort && ["newest","oldest","unread","sender","subject","attachments"].includes(savedSort)) {
+          ui.setEmailSort(savedSort as never);
+        }
+
         // Restore email body theme
         const savedBodyTheme = await getSetting("email_body_theme");
         if (savedBodyTheme === "light" || savedBodyTheme === "dim" || savedBodyTheme === "dark") {
