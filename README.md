@@ -14,18 +14,16 @@
 </p>
 
 <p align="center">
+  <strong>A fork of <a href="https://github.com/avihaymenahem/velo">Velo</a> — see <a href="FORK.md">what this fork changes</a>.</strong>
+</p>
+
+<p align="center">
   <a href="#features">Features</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#installation">Installation</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="docs/keyboard-shortcuts.md">Shortcuts</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="docs/architecture.md">Architecture</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="docs/development.md">Development</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="CONTRIBUTING.md">Contributing</a>
-</p>
-
----
-
-<p align="center">
-  <img width="1920" height="1032" alt="Screenshot 2026-02-17 223320" src="https://github.com/user-attachments/assets/dd096d15-4c1e-438c-99f9-c38b50a8a437" />
 </p>
 
 ---

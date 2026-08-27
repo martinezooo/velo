@@ -4,6 +4,7 @@ import { Minus, Square, X, Copy } from "lucide-react";
 import { LastSyncLine } from "./LastSyncLine";
 import { AiStatusChip } from "@/components/ui/AiStatusChip";
 import { BodyThemeSwitch } from "@/components/ui/BodyThemeSwitch";
+import { VersionChip } from "@/components/ui/VersionChip";
 import logoUrl from "@/assets/logo.svg";
 
 const isMac = navigator.userAgent.includes("Macintosh");
@@ -54,6 +55,7 @@ export function TitleBar() {
       <div className="flex shrink-0 items-center gap-1 pr-2">
         <BodyThemeSwitch />
         <AiStatusChip />
+        <VersionChip />
       </div>
 
       {/* Window controls — right side (hidden on macOS, uses native traffic lights) */}
