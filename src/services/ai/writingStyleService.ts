@@ -1,5 +1,4 @@
-import { getActiveProvider } from "./providerManager";
-import { AiError } from "./errors";
+import { isAiAvailable } from "./providerManager";
 import { getAiCache, setAiCache, deleteAiCache } from "@/services/db/aiCache";
 import {
   getWritingStyleProfile,
@@ -10,23 +9,8 @@ import { getRecentSentMessages, type DbMessage } from "@/services/db/messages";
 import { getAccount } from "@/services/db/accounts";
 import { getSetting } from "@/services/db/settings";
 import { WRITING_STYLE_ANALYSIS_PROMPT, AUTO_DRAFT_REPLY_PROMPT } from "./prompts";
+import { callAi } from "./aiService";
 
-async function callAi(systemPrompt: string, userContent: string): Promise<string> {
-  try {
-    const provider = await getActiveProvider();
-    return await provider.complete({ systemPrompt, userContent });
-  } catch (err) {
-    if (err instanceof AiError) throw err;
-    const message = err instanceof Error ? err.message : String(err);
-    if (message.includes("401") || message.includes("authentication")) {
-      throw new AiError("AUTH_ERROR", "Invalid API key");
-    }
-    if (message.includes("429") || message.includes("rate")) {
-      throw new AiError("RATE_LIMITED", "Rate limited — please try again shortly");
-    }
-    throw new AiError("NETWORK_ERROR", message);
-  }
-}
 
 /**
  * Analyze writing style from sent email samples.
@@ -153,9 +137,11 @@ export async function isAutoDraftEnabled(): Promise<boolean> {
   const enabled = await getSetting("ai_auto_draft_enabled");
   if (enabled === "false") return false;
 
+  // Deliberately not testConnection(): that sends a real completion to the
+  // provider every time a reply box opens, which is both slow and billable.
+  // Whether a key is configured is the question being asked here.
   try {
-    const provider = await getActiveProvider();
-    return (await provider.testConnection()).ok;
+    return await isAiAvailable();
   } catch {
     return false;
   }

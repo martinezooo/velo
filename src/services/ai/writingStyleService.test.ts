@@ -13,6 +13,7 @@ vi.mock("./providerManager", () => ({
     complete: vi.fn().mockResolvedValue("Mocked AI response"),
     testConnection: vi.fn().mockResolvedValue({ ok: true }),
   }),
+  isAiAvailable: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock("@/services/db/aiCache", () => ({

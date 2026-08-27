@@ -6,6 +6,26 @@ All notable changes to Revelo are documented here. This project follows
 Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
 (`ec47a7a`). Everything below is what this fork changed.
 
+## [Unreleased]
+
+### Added
+- Summary language, in Settings › AI. Summaries are read by one person and can
+  sit in their own language whatever the mail is written in; replies always
+  follow the language of the message being answered.
+
+### Changed
+- Thread summaries are built from the newest message backwards and updated
+  incrementally as mail arrives, instead of being rewritten from the whole
+  thread each time.
+
+### Fixed
+- "Generating draft…" could spin forever. Nothing bounded a model call, and the
+  auto-draft check sent a real completion to the provider every time a reply
+  box opened, just to ask whether AI was configured.
+- Long threads were summarised from their oldest messages: the thread text was
+  truncated front-to-back, so the end — where a thread actually stands — was
+  the first thing dropped.
+
 ## [0.5.0] - 2026-08-27
 
 ### Added

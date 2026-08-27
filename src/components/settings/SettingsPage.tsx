@@ -145,6 +145,7 @@ export function SettingsPage() {
   const [reauthStatus, setReauthStatus] = useState<Record<string, "idle" | "authorizing" | "done" | "error">>({});
   const [resyncStatus, setResyncStatus] = useState<Record<string, "idle" | "syncing" | "done" | "error">>({});
   const [showMailboxUsage, setShowMailboxUsage] = useState(false);
+  const [summaryLanguage, setSummaryLanguage] = useState("auto");
   const [mailboxUsage, setMailboxUsage] = useState<Map<string, MailboxUsage>>(() => new Map());
   const [autoArchiveCategories, setAutoArchiveCategories] = useState<Set<string>>(() => new Set());
   const [smartNotifications, setSmartNotifications] = useState(true);
@@ -163,6 +164,9 @@ export function SettingsPage() {
       setClientId(id ?? "");
       const secret = await getSecureSetting("google_client_secret");
       setClientSecret(secret ?? "");
+      const summaryLang = await getSetting("ai_summary_language");
+      if (summaryLang) setSummaryLanguage(summaryLang);
+
       const usageSetting = await getSetting("show_mailbox_usage");
       setShowMailboxUsage(usageSetting === "true");
       if (usageSetting === "true") {
@@ -1087,6 +1091,31 @@ export function SettingsPage() {
 
               {activeTab === "ai" && (
                 <>
+                  <Section title="Language">
+                    <p className="text-xs text-text-tertiary mb-3">
+                      Summaries are for you, so they can sit in your own language
+                      whatever the mail is written in. Replies always follow the
+                      language of the message you are answering.
+                    </p>
+                    <SettingRow label="Summary language">
+                      <select
+                        value={summaryLanguage}
+                        onChange={async (e) => {
+                          setSummaryLanguage(e.target.value);
+                          await setSetting("ai_summary_language", e.target.value);
+                        }}
+                        className="w-48 bg-bg-tertiary text-text-primary text-sm px-3 py-1.5 rounded-md border border-border-primary focus:border-accent outline-none"
+                      >
+                        <option value="auto">Same as the thread</option>
+                        <option value="Polish">Polish</option>
+                        <option value="English">English</option>
+                        <option value="German">German</option>
+                        <option value="French">French</option>
+                        <option value="Spanish">Spanish</option>
+                      </select>
+                    </SettingRow>
+                  </Section>
+
                   <Section title="Provider">
                     <p className="text-xs text-text-tertiary mb-3">
                       Choose which AI provider to use for summarization, compose assistance, and smart categorization.
