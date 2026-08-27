@@ -75,6 +75,22 @@ export function ThreadView({ thread }: ThreadViewProps) {
   const [blockImages, setBlockImages] = useState<boolean | null>(null);
   const [allowlistedSenders, setAllowlistedSenders] = useState<Set<string>>(new Set());
 
+  // Older mail was synced before threading headers were captured. Fetch them
+  // for this thread now, so a reply written here can thread properly.
+  useEffect(() => {
+    if (!accountId) return;
+    let cancelled = false;
+    import("@/services/gmail/headerBackfill")
+      .then(({ backfillThreadHeaders }) => backfillThreadHeaders(accountId, thread.id))
+      .then((updated) => {
+        if (updated > 0 && !cancelled) {
+          getMessagesForThread(accountId, thread.id).then(setMessages).catch(() => {});
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [accountId, thread.id]);
+
   // Preload settings eagerly on mount (parallel with message loading)
   useEffect(() => {
     getSetting("block_remote_images").then((val) => setBlockImages(val !== "false"));
@@ -190,6 +206,7 @@ export function ThreadView({ thread }: ThreadViewProps) {
       bodyHtml: buildForwardQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      forwardSourceMessageId: lastMessage.id,
       inReplyToHeader: lastMessage.message_id_header ?? null,
       referencesHeader: buildReferences(
         lastMessage.message_id_header,

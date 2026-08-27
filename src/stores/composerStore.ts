@@ -23,6 +23,8 @@ export interface ComposerState {
   threadId: string | null;
   /** Provider message id — used for drafts and scheduling, not for headers. */
   inReplyToMessageId: string | null;
+  /** Message being forwarded, so its attachments can be offered. */
+  forwardSourceMessageId: string | null;
   /** RFC 5322 Message-ID of the parent, for the In-Reply-To header. */
   inReplyToHeader: string | null;
   /** The parent's References chain plus the parent, for the References header. */
@@ -49,6 +51,7 @@ export interface ComposerState {
     threadId?: string | null;
     inReplyToMessageId?: string | null;
     inReplyToHeader?: string | null;
+    forwardSourceMessageId?: string | null;
     referencesHeader?: string | null;
     draftId?: string | null;
   }) => void;
@@ -84,6 +87,7 @@ export const useComposerStore = create<ComposerState>((set) => ({
   threadId: null,
   inReplyToMessageId: null,
   inReplyToHeader: null,
+  forwardSourceMessageId: null,
   referencesHeader: null,
   showCcBcc: false,
   draftId: null,
@@ -109,6 +113,7 @@ export const useComposerStore = create<ComposerState>((set) => ({
       threadId: opts?.threadId ?? null,
       inReplyToMessageId: opts?.inReplyToMessageId ?? null,
       inReplyToHeader: opts?.inReplyToHeader ?? null,
+      forwardSourceMessageId: opts?.forwardSourceMessageId ?? null,
       referencesHeader: opts?.referencesHeader ?? null,
       showCcBcc: (opts?.cc?.length ?? 0) > 0 || (opts?.bcc?.length ?? 0) > 0,
       draftId: opts?.draftId ?? null,

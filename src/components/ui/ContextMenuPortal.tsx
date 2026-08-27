@@ -313,6 +313,7 @@ function ThreadMenu({
       bodyHtml: buildForwardQuote(lastMessage),
       threadId: lastMessage.thread_id,
       inReplyToMessageId: lastMessage.id,
+      forwardSourceMessageId: lastMessage.id,
       inReplyToHeader: lastMessage.message_id_header ?? null,
       referencesHeader: buildReferences(
         lastMessage.message_id_header,
@@ -682,6 +683,7 @@ function MessageMenu({
       bodyHtml: buildForwardQuote(msg),
       threadId,
       inReplyToMessageId: messageId,
+      forwardSourceMessageId: messageId,
     });
   };
 

@@ -14,6 +14,13 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
   follow the language of the message being answered.
 
 ### Changed
+- Forwarding asks whether to bring the original's attachments along, and only
+  downloads them once you say yes. It used to drop them silently, which loses
+  the document the message was about; attaching them unasked is the other wrong
+  answer, since a forward is often just "look at this thread".
+- Opening a thread fills in the threading headers for any of its messages
+  synced before those were captured, so a reply written there threads properly
+  without re-fetching thousands of messages.
 - Thread summaries are built from the newest message backwards and updated
   incrementally as mail arrives, instead of being rewritten from the whole
   thread each time.

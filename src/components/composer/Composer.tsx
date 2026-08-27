@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ForwardAttachmentsPrompt } from "./ForwardAttachmentsPrompt";
 import { CSSTransition } from "react-transition-group";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -57,6 +58,7 @@ export function Composer() {
   const setFromEmail = useComposerStore((s) => s.setFromEmail);
   const setViewMode = useComposerStore((s) => s.setViewMode);
   const addAttachment = useComposerStore((s) => s.addAttachment);
+  const forwardSourceMessageId = useComposerStore((s) => s.forwardSourceMessageId);
 
   const activeAccountId = useAccountStore((s) => s.activeAccountId);
   const accounts = useAccountStore((s) => s.accounts);
@@ -528,6 +530,14 @@ export function Composer() {
             />
           </div>
         </div>
+
+        {/* Forwarding: offer the original's files rather than dropping them */}
+        {mode === "forward" && activeAccountId && forwardSourceMessageId && (
+          <ForwardAttachmentsPrompt
+            accountId={activeAccountId}
+            messageId={forwardSourceMessageId}
+          />
+        )}
 
         {/* Editor toolbar */}
         <EditorToolbar
