@@ -44,6 +44,9 @@ Revelo is a fork of [Velo](https://github.com/avihaymenahem/velo) 0.4.21
   mail became a hidden `Bcc:` the moment the reader hit Reply. Every header
   value is now flattened before it is emitted, including `In-Reply-To` and
   `References`, which are copied from mail the user did not write.
+  The reachable path is a `mailto:` link, which Revelo registers system-wide:
+  anyone can put one on a page, and its subject and recipients were passed
+  through verbatim. They are cleaned on the way in as well as on the way out.
 - Quoting an incoming message put its HTML into the draft unsanitised and its
   sender name unescaped. Both go through the sanitiser now.
 

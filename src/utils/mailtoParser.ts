@@ -6,6 +6,16 @@ export interface MailtoFields {
   body: string;
 }
 
+/**
+ * A mailto: link is attacker-supplied: anyone can put one on a page or in a
+ * message, and the OS hands it straight to this app. A CR or LF inside a field
+ * is never legitimate here, and downstream it is a header-injection primitive,
+ * so it is removed on the way in as well as on the way out.
+ */
+function clean(value: string): string {
+  return value.replace(/[\r\n\u2028\u2029\u0000]+/g, " ").trim();
+}
+
 export function parseMailtoUrl(url: string): MailtoFields {
   const result: MailtoFields = {
     to: [],
@@ -31,7 +41,7 @@ export function parseMailtoUrl(url: string): MailtoFields {
   if (addressPart) {
     result.to = decodeURIComponent(addressPart)
       .split(",")
-      .map((a) => a.trim())
+      .map((a) => clean(a))
       .filter(Boolean);
   }
 
@@ -43,7 +53,7 @@ export function parseMailtoUrl(url: string): MailtoFields {
     if (toParam) {
       const extraTo = toParam
         .split(",")
-        .map((a) => a.trim())
+        .map((a) => clean(a))
         .filter(Boolean);
       result.to = [...result.to, ...extraTo];
     }
@@ -52,7 +62,7 @@ export function parseMailtoUrl(url: string): MailtoFields {
     if (cc) {
       result.cc = cc
         .split(",")
-        .map((a) => a.trim())
+        .map((a) => clean(a))
         .filter(Boolean);
     }
 
@@ -60,15 +70,16 @@ export function parseMailtoUrl(url: string): MailtoFields {
     if (bcc) {
       result.bcc = bcc
         .split(",")
-        .map((a) => a.trim())
+        .map((a) => clean(a))
         .filter(Boolean);
     }
 
     const subject = params.get("subject");
     if (subject) {
-      result.subject = subject;
+      result.subject = clean(subject);
     }
 
+    // The body is not a header, so its line breaks are meaningful and kept
     const body = params.get("body");
     if (body) {
       result.body = body;
